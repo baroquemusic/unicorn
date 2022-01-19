@@ -1,0 +1,20 @@
+{
+  "name": "unicorn",
+  "version": "1.0.0",
+  "description": "Unicorn 3D",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack",
+    "dev": "webpack serve"
+  },
+  "author": "Gabor Kovacs",
+  "license": "ISC",
+  "devDependencies": {
+    "html-webpack-plugin": "^5.5.0",
+    "three": "^0.136.0",
+    "troika-three-text": "^0.45.0",
+    "webpack": "^5.65.0",
+    "webpack-cli": "^4.9.1",
+    "webpack-dev-server": "^4.7.2"
+  }
+}
