@@ -187,7 +187,7 @@ gltfLoader.load( appDevelopment, ( a ) => {
 
 gltfLoader.load( deepLearning, ( a ) => {
 	o4 = a.scene.children[0]
-	o4.scale.set( .5, .5, .5 )
+	o4.scale.set( 70, 70, 70 )
 	o4.position.x = 999
 	objects.add( o4 )
 }, undefined, ( error ) => { console.error( error ) } )
@@ -232,9 +232,9 @@ function onMouseWheel( event ) {
 
 		services.position.y = -11 + Math.log( scrollPos ) * 6
 		services.rotation.x = -Math.PI / 180 * ( 90 - Math.exp( scrollPos / 2 ) )
-		objects.rotation.x = Math.PI / 180 * -Math.exp( scrollPos / 2 )
+		objects.rotation.x = Math.PI / 180 * ( - Math.exp( scrollPos / 2 ) )
 		services.rotation.z = -Math.PI / 22.5 * scrollPos
-		objects.rotation.z = -Math.PI / 22.5 * scrollPos + Math.PI / 11.25
+		objects.rotation.z = -Math.PI / 22.5 * scrollPos - Math.PI / 5
 		services.scale.x = 
 		services.scale.y = 
 		services.scale.z = 
@@ -246,11 +246,11 @@ function onMouseWheel( event ) {
 			eval( 's' + i ).position.x = Math.cos( servRot ) * Math.log( scrollPos ) * 4
 			eval( 's' + i ).position.y = Math.sin( servRot ) * Math.log( scrollPos ) * 4
 			eval( 's' + i ).curveRadius = -.1 - Math.exp( scrollPos / 3 )
-			eval( 'o' + i ).position.x = Math.cos( servRot ) * Math.log( 100 / scrollPos ) * 20
-			eval( 'o' + i ).position.y = Math.sin( servRot ) * Math.log( 100 / scrollPos ) * 20
+			eval( 'o' + i ).position.x = Math.cos( servRot ) * Math.log( 350 / scrollPos ) * 10
+			eval( 'o' + i ).position.y = Math.sin( servRot ) * Math.log( 350 / scrollPos ) * 10
 			eval( 'o' + i ).rotation.x = 
 			eval( 'o' + i ).rotation.y = 
-			eval( 'o' + i ).rotation.z = Math.PI / 45 * scrollPos
+			eval( 'o' + i ).rotation.z = Math.PI / 22.5 * scrollPos
 
 		}
 		
@@ -261,51 +261,51 @@ function onMouseWheel( event ) {
 		logo.position.x = -logoWidth * .005 + Math.log( scrollPos + 1 ) / .75
 
 		services.rotation.z = -Math.PI / 22.5 * scrollPos
-		objects.rotation.z = -Math.PI / 22.5 * scrollPos + Math.PI / 11.25
+		objects.rotation.z = -Math.PI / 22.5 * scrollPos - Math.PI / 5
 
 		for( let i = 1; i < 6; i++ ) {
 
 			servRot = eval( 's' + i ).rotation.z
 			eval( 's' + i ).curveRadius = -.1 - Math.exp( scrollPos / 3 )
-			eval( 'o' + i ).position.x = Math.cos( servRot ) * Math.log( 100 / scrollPos ) * 20
-			eval( 'o' + i ).position.y = Math.sin( servRot ) * Math.log( 100 / scrollPos ) * 20
+			eval( 'o' + i ).position.x = Math.cos( servRot ) * Math.log( 250 / scrollPos ) * 10
+			eval( 'o' + i ).position.y = Math.sin( servRot ) * Math.log( 250 / scrollPos ) * 10
 			eval( 'o' + i ).rotation.x = 
 			eval( 'o' + i ).rotation.y = 
-			eval( 'o' + i ).rotation.z = Math.PI / 45 * scrollPos
+			eval( 'o' + i ).rotation.z = Math.PI / 22.5 * scrollPos
 
 		}
 
 	} else if( scrollPos < 50 ) {
 
 		services.rotation.z = -Math.PI / 22.5 * scrollPos
-		objects.rotation.z = -Math.PI / 22.5 * scrollPos + Math.PI / 11.25
+		objects.rotation.z = -Math.PI / 22.5 * scrollPos - Math.PI / 5
 
 		for( let i = 1; i < 6; i++ ) {
 
 			servRot = eval( 's' + i ).rotation.z
-			eval( 'o' + i ).position.x = Math.cos( servRot ) * Math.log( 100 / scrollPos ) * 20
-			eval( 'o' + i ).position.y = Math.sin( servRot ) * Math.log( 100 / scrollPos ) * 20
+			eval( 'o' + i ).position.x = Math.cos( servRot ) * Math.log( 150 / scrollPos ) * 10
+			eval( 'o' + i ).position.y = Math.sin( servRot ) * Math.log( 150 / scrollPos ) * 10
 			eval( 'o' + i ).rotation.x = 
 			eval( 'o' + i ).rotation.y = 
-			eval( 'o' + i ).rotation.z = Math.PI / 45 * scrollPos
+			eval( 'o' + i ).rotation.z = Math.PI / 22.5 * scrollPos
 
 		}
 
 	} else {
 
 		services.rotation.z = -Math.PI / 22.5 * scrollPos
-		objects.rotation.z = -Math.PI / 22.5 * scrollPos + Math.PI / 11.25
+		objects.rotation.z = -Math.PI / 22.5 * scrollPos - Math.PI / 5
 
 		for( let i = 1; i < 6; i++ ) {
 
 			servRot = eval( 's' + i ).rotation.z
-			eval( 's' + i ).position.x = Math.cos( servRot ) * 
-				Math.exp( ( scrollPos - 30 ) / 10 )
-			eval( 's' + i ).position.y = Math.sin( servRot ) * 
-				Math.exp( ( scrollPos - 30 ) / 10 )
+			eval( 's' + i ).position.x = Math.cos( servRot ) * Math.exp( ( scrollPos - 30 ) / 10 )
+			eval( 's' + i ).position.y = Math.sin( servRot ) * Math.exp( ( scrollPos - 30 ) / 10 )
+			eval( 'o' + i ).position.x = Math.cos( servRot ) * Math.log( 100 / scrollPos ) * 10
+			eval( 'o' + i ).position.y = Math.sin( servRot ) * Math.log( 100 / scrollPos ) * 10
 			eval( 'o' + i ).rotation.x = 
 			eval( 'o' + i ).rotation.y = 
-			eval( 'o' + i ).rotation.z = Math.PI / 45 * scrollPos
+			eval( 'o' + i ).rotation.z = Math.PI / 22.5 * scrollPos
 
 		}
 
