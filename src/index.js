@@ -180,7 +180,7 @@ gltfLoader.load( interactive3D, ( a ) => {
 
 gltfLoader.load( appDevelopment, ( a ) => {
 	o3 = a.scene.children[0]
-	o3.scale.set( 1.3, 1.3, 1.3 )
+	o3.scale.set( 2.5, 2.5, 2.5 )
 	o3.position.x = 999
 	objects.add( o3 )
 }, undefined, ( error ) => { console.error( error ) } )
@@ -194,7 +194,7 @@ gltfLoader.load( deepLearning, ( a ) => {
 
 gltfLoader.load( extendedReality, ( a ) => {
 	o5 = a.scene.children[0]
-	o5.scale.set( .03, .03, .03 )
+	o5.scale.set( 4, 4, 4 )
 	o5.position.x = 999
 	objects.add( o5 )
 }, undefined, ( error ) => { console.error( error ) } )
@@ -227,18 +227,17 @@ function onMouseWheel( event ) {
 	if( scrollPos < 8 ) {
 
 		logo.position.y = 12 - Math.log( scrollPos + 2 ) * 3.2
+		logo.position.x = -logoWidth * .005 + Math.log( scrollPos + 1 ) / .72
 		logo.scale.x = logo.scale.y = .01 - ( Math.log( scrollPos + 1 ) / 500 )
-		logo.position.x = -logoWidth * .005 + Math.log( scrollPos + 1 ) / .75
 
 		services.position.y = -11 + Math.log( scrollPos ) * 6
 		services.rotation.x = -Math.PI / 180 * ( 90 - Math.exp( scrollPos / 2 ) )
 		objects.rotation.x = Math.PI / 180 * ( - Math.exp( scrollPos / 2 ) )
 		services.rotation.z = -Math.PI / 22.5 * scrollPos
-		objects.rotation.z = -Math.PI / 22.5 * scrollPos - Math.PI / 5
-		services.scale.x = 
-		services.scale.y = 
-		services.scale.z = 
-		Math.log( scrollPos ) / 2.7
+		objects.rotation.z = -Math.PI / 22.5 * scrollPos - ( 36 * ( Math.PI / 180 ) )
+		services.scale.x = services.scale.y = services.scale.z = Math.log( scrollPos ) / 2.7
+
+		objects.scale.x = objects.scale.y = objects.scale.z = 22 / scrollPos
 
 		for( let i = 1; i < 6; i++ ) {
 
@@ -246,11 +245,11 @@ function onMouseWheel( event ) {
 			eval( 's' + i ).position.x = Math.cos( servRot ) * Math.log( scrollPos ) * 4
 			eval( 's' + i ).position.y = Math.sin( servRot ) * Math.log( scrollPos ) * 4
 			eval( 's' + i ).curveRadius = -.1 - Math.exp( scrollPos / 3 )
-			eval( 'o' + i ).position.x = Math.cos( servRot ) * Math.log( 350 / scrollPos ) * 10
-			eval( 'o' + i ).position.y = Math.sin( servRot ) * Math.log( 350 / scrollPos ) * 10
+			eval( 'o' + i ).position.x = Math.cos( servRot ) * Math.log( 350 / scrollPos ) * 7.2
+			eval( 'o' + i ).position.y = Math.sin( servRot ) * Math.log( 350 / scrollPos ) * 7.2
 			eval( 'o' + i ).rotation.x = 
 			eval( 'o' + i ).rotation.y = 
-			eval( 'o' + i ).rotation.z = Math.PI / 22.5 * scrollPos
+			eval( 'o' + i ).rotation.z = Math.PI / 33 * scrollPos
 
 		}
 		
@@ -258,54 +257,59 @@ function onMouseWheel( event ) {
 
 		logo.position.y = 12 - Math.log( scrollPos + 2 ) * 3.2
 		logo.scale.x = logo.scale.y = .01 - ( Math.log( scrollPos + 1 ) / 500 )
-		logo.position.x = -logoWidth * .005 + Math.log( scrollPos + 1 ) / .75
+		logo.position.x = -logoWidth * .005 + Math.log( scrollPos + 1 ) / .72
 
 		services.rotation.z = -Math.PI / 22.5 * scrollPos
-		objects.rotation.z = -Math.PI / 22.5 * scrollPos - Math.PI / 5
+		objects.rotation.z = -Math.PI / 22.5 * scrollPos - ( 36 * ( Math.PI / 180 ) )
+
+		objects.scale.x = objects.scale.y = objects.scale.z = 22 / scrollPos
 
 		for( let i = 1; i < 6; i++ ) {
 
 			servRot = eval( 's' + i ).rotation.z
 			eval( 's' + i ).curveRadius = -.1 - Math.exp( scrollPos / 3 )
-			eval( 'o' + i ).position.x = Math.cos( servRot ) * Math.log( 250 / scrollPos ) * 10
-			eval( 'o' + i ).position.y = Math.sin( servRot ) * Math.log( 250 / scrollPos ) * 10
+			eval( 'o' + i ).position.x = Math.cos( servRot ) * Math.log( 350 / scrollPos ) * 7.2
+			eval( 'o' + i ).position.y = Math.sin( servRot ) * Math.log( 350 / scrollPos ) * 7.2
 			eval( 'o' + i ).rotation.x = 
 			eval( 'o' + i ).rotation.y = 
-			eval( 'o' + i ).rotation.z = Math.PI / 22.5 * scrollPos
+			eval( 'o' + i ).rotation.z = Math.PI / 33 * scrollPos
 
 		}
 
 	} else if( scrollPos < 50 ) {
 
 		services.rotation.z = -Math.PI / 22.5 * scrollPos
-		objects.rotation.z = -Math.PI / 22.5 * scrollPos - Math.PI / 5
+		objects.rotation.z = -Math.PI / 22.5 * scrollPos - ( 36 * ( Math.PI / 180 ) )
+		objects.scale.x = objects.scale.y = objects.scale.z = 22 / scrollPos
 
 		for( let i = 1; i < 6; i++ ) {
 
 			servRot = eval( 's' + i ).rotation.z
-			eval( 'o' + i ).position.x = Math.cos( servRot ) * Math.log( 150 / scrollPos ) * 10
-			eval( 'o' + i ).position.y = Math.sin( servRot ) * Math.log( 150 / scrollPos ) * 10
+			eval( 'o' + i ).position.x = Math.cos( servRot ) * Math.log( 350 / scrollPos ) * 7.2
+			eval( 'o' + i ).position.y = Math.sin( servRot ) * Math.log( 350 / scrollPos ) * 7.2
 			eval( 'o' + i ).rotation.x = 
 			eval( 'o' + i ).rotation.y = 
-			eval( 'o' + i ).rotation.z = Math.PI / 22.5 * scrollPos
+			eval( 'o' + i ).rotation.z = Math.PI / 33 * scrollPos
 
 		}
 
 	} else {
 
 		services.rotation.z = -Math.PI / 22.5 * scrollPos
-		objects.rotation.z = -Math.PI / 22.5 * scrollPos - Math.PI / 5
+		objects.rotation.z = -Math.PI / 22.5 * scrollPos - ( 36 * ( Math.PI / 180 ) )
+		objects.scale.x = objects.scale.y =
+		objects.scale.z = ( .35 / Math.exp( ( scrollPos - 50 ) / 6 ) )
 
 		for( let i = 1; i < 6; i++ ) {
 
 			servRot = eval( 's' + i ).rotation.z
 			eval( 's' + i ).position.x = Math.cos( servRot ) * Math.exp( ( scrollPos - 30 ) / 10 )
 			eval( 's' + i ).position.y = Math.sin( servRot ) * Math.exp( ( scrollPos - 30 ) / 10 )
-			eval( 'o' + i ).position.x = Math.cos( servRot ) * Math.log( 100 / scrollPos ) * 10
-			eval( 'o' + i ).position.y = Math.sin( servRot ) * Math.log( 100 / scrollPos ) * 10
+			eval( 'o' + i ).position.x = Math.cos( servRot ) * Math.log( 350 / scrollPos ) * 7.2
+			eval( 'o' + i ).position.y = Math.sin( servRot ) * Math.log( 350 / scrollPos ) * 7.2
 			eval( 'o' + i ).rotation.x = 
 			eval( 'o' + i ).rotation.y = 
-			eval( 'o' + i ).rotation.z = Math.PI / 22.5 * scrollPos
+			eval( 'o' + i ).rotation.z = Math.PI / 33 * scrollPos
 
 		}
 
