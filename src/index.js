@@ -86,6 +86,7 @@ logoLoader.load(
     logo.position.set( -logoWidth * .005, 10, 0 )
 		
     scene.add( logo )
+		console.log(logo.children[0].geometry)
     
 	}
 
