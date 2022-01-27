@@ -38,12 +38,52 @@ function onWindowResize() {
 
 window.addEventListener( 'wheel', onMouseWheel, false )
 window.addEventListener( 'resize', onWindowResize, false )
+window.addEventListener( 'mousemove', onMouseMove, false )
+
+const raycaster = new THREE.Raycaster()
+const mouse = new THREE.Vector2()
+
+function onMouseMove( event ) {
+
+	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1
+	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1
+
+}
 
 ///////////////// LOGO
 
-const logoLoader = new SVGLoader()
-const logo = new THREE.Object3D()
+const logoLoader = new SVGLoader
+const logo = new THREE.Object3D
 let logoWidth
+let uniforms = {
+		colorA: { type: 'vec3', value: new THREE.Color( 0x00ff00 ) },
+		colorB: { type: 'vec3', value: new THREE.Color( 0xff0000 ) }
+}
+
+function vertexShader() {
+  return `
+    varying vec3 vUv; 
+
+    void main() {
+      vUv = position; 
+
+      vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
+      gl_Position = projectionMatrix * modelViewPosition; 
+    }
+  `
+}
+
+function fragmentShader() {
+  return `
+    uniform vec3 colorA; 
+		uniform vec3 colorB; 
+		varying vec3 vUv;
+
+		void main() {
+			gl_FragColor = vec4(mix(colorA, colorB, vUv.z), 1.0);
+		}
+  `
+}
 
 logoLoader.load(
 
@@ -57,12 +97,10 @@ logoLoader.load(
 
 			const path = paths[ i ]
 
-			const material = new THREE.MeshBasicMaterial( {
-
-				color: path.color,
-				// side: THREE.DoubleSide,
-				depthWrite: false
-        
+			const material = new THREE.ShaderMaterial( {
+				uniforms: uniforms,
+				fragmentShader: fragmentShader(),
+				vertexShader: vertexShader(),
 			} )
 
 			const shapes = SVGLoader.createShapes( path )
@@ -74,7 +112,7 @@ logoLoader.load(
 				const mesh = new THREE.Mesh( geometry, material )
 
 				logo.add( mesh )
-        
+      
 			}
 
 		}
@@ -86,7 +124,6 @@ logoLoader.load(
     logo.position.set( -logoWidth * .005, 10, 0 )
 		
     scene.add( logo )
-		console.log(logo.children[0].geometry)
     
 	}
 
@@ -94,8 +131,8 @@ logoLoader.load(
 
 /////////////////// TEXT: QUOTES
 
-const txtQuoteM = new Text()
-const txtQuoteL = new Text()
+const txtQuoteM = new Text
+const txtQuoteL = new Text
 
 txtQuoteL.textAlign = 'left'
 txtQuoteM.text = 'The greater danger for most of us\nlies not in setting our aim too high and\nfalling short; but in setting our aim\ntoo low, and achieving our mark\n\n- Michelangelo Buonarroti'
@@ -137,11 +174,11 @@ txtQuoteL.sync( () => {
 
 /////////// TEXT: SERVICES
 
-const s1 = new Text()
-const s2 = new Text()
-const s3 = new Text()
-const s4 = new Text()
-const s5 = new Text()
+const s1 = new Text
+const s2 = new Text
+const s3 = new Text
+const s4 = new Text
+const s5 = new Text
 
 s2.text = 'Interactive 3D'
 s3.text = 'App Development'
@@ -206,7 +243,6 @@ gltfLoader.load( blockChain, ( a ) => {
 	o1.position.x = 999
 	objects.add( o1 )
 }, undefined, ( error ) => { console.error( error ) } )
-
 
 scene.add( objects )
 
@@ -342,11 +378,21 @@ function onMouseWheel( event ) {
 
 ////////////////// ANIM
 
-function animate() {
+function animate() { 
 
   requestAnimationFrame( animate )
 
   renderer.render( scene, camera )
+
+	// raycaster.setFromCamera( mouse, camera )
+
+	// const intersects = raycaster.intersectObjects( scene.children )
+
+	// for ( let i = 0; i < intersects.length; i ++ ) {
+
+	// 	intersects[ i ].object.material.color.set( 0xaaaaaa )
+
+	// }
 
 }
 
