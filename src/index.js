@@ -1,8 +1,9 @@
 import favicon from './assets/favicon.ico'
 import * as THREE from 'three'
 import { LoadingManager } from 'three'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader'
+import { Earcut } from 'three/src/extras/Earcut'
 import { Text } from 'troika-three-text'
 import unicornLogo from './assets/unicorn-logo.svg'
 import font from './assets/fonts/Philosopher.woff'
@@ -55,32 +56,47 @@ function onMouseMove( event ) {
 const logoLoader = new SVGLoader
 const logo = new THREE.Object3D
 let logoWidth
-let uniforms = {
-		colorA: { type: 'vec3', value: new THREE.Color( 0x00ff00 ) },
-		colorB: { type: 'vec3', value: new THREE.Color( 0xff0000 ) }
-}
+let triangulated = new Int32Array( 3 )
+triangulated = []
 
 function vertexShader() {
   return `
-    varying vec3 vUv; 
+		void main() {
+			gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+		}
 
-    void main() {
-      vUv = position; 
+/*
+		attribute vec3 direction;
+		attribute vec3 centroid;
 
-      vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
-      gl_Position = projectionMatrix * modelViewPosition; 
-    }
+		uniform float animate;
+		uniform float scale;
+
+		#define PI 3.14159265359;
+
+		void main() {
+			float theta = (1.0 - animate) * (PI * 1.5) * sign(centroid.x);
+			mat3 rotMat = mat3(
+				vec3(cos(theta), 0.0, sin(theta)),
+				vec3(0.0, 1.0, 0.0),
+				vec3(-sin(theta), 0.0, cos(theta))
+			);
+			
+			vec3 offset = mix(vec3(0.0), direction.xyz * rotMat, 1.0 - animate);
+			vec3 tPos = mix(centroid.xyz, position.xyz, scale) + offset;
+			
+			gl_Position = projectionMatrix *
+				modelViewMatrix *
+				vec4(tPos, 1.0);
+		}
+*/
   `
 }
 
 function fragmentShader() {
   return `
-    uniform vec3 colorA; 
-		uniform vec3 colorB; 
-		varying vec3 vUv;
-
 		void main() {
-			gl_FragColor = vec4(mix(colorA, colorB, vUv.z), 1.0);
+			gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
 		}
   `
 }
@@ -98,9 +114,13 @@ logoLoader.load(
 			const path = paths[ i ]
 
 			const material = new THREE.ShaderMaterial( {
-				uniforms: uniforms,
 				fragmentShader: fragmentShader(),
 				vertexShader: vertexShader(),
+				side: THREE.DoubleSide,
+				uniforms: {
+					scale: { type: 'f', value: 0 },
+					animate: { type: 'f', value: 0 }
+				}
 			} )
 
 			const shapes = SVGLoader.createShapes( path )
@@ -109,14 +129,24 @@ logoLoader.load(
 
 				const shape = shapes[ j ]
 				const geometry = new THREE.ShapeGeometry( shape )
+				const triangles = Earcut.triangulate(
+						geometry.attributes.position.array,
+						null,
+						3
+					)
+				triangulated = triangulated.concat( triangles )
+
+				const triGeo = new THREE.BufferGeometry
+				triGeo.setAttribute( 'position', new THREE.BufferAttribute( triangulated, 3 ) )
+
 				const mesh = new THREE.Mesh( geometry, material )
 
 				logo.add( mesh )
-      
+				console.log(triGeo)
 			}
 
 		}
-
+		
 		const bbLogo = new THREE.Box3().setFromObject( logo )
 		logoWidth = bbLogo.max.x
     logo.rotation.y = logo.rotation.z = Math.PI
@@ -128,6 +158,7 @@ logoLoader.load(
 	}
 
 )
+
 
 /////////////////// TEXT: QUOTES
 
