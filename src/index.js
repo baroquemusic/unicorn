@@ -56,40 +56,29 @@ function onMouseMove( event ) {
 const logoLoader = new SVGLoader
 const logo = new THREE.Object3D
 let logoWidth
-let triangulated = new Int32Array( 3 )
-triangulated = []
+
+function random(out, scale) {
+    scale = scale || 1.0
+
+    var r = Math.random() * 2.0 * Math.PI
+    var z = (Math.random() * 2.0) - 1.0
+    var zScale = Math.sqrt(1.0-z*z) * scale
+
+    out[0] = Math.cos(r) * zScale
+    out[1] = Math.sin(r) * zScale
+    out[2] = z * scale
+    return out
+}
 
 function vertexShader() {
   return `
-		void main() {
-			gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-		}
-
-/*
 		attribute vec3 direction;
-		attribute vec3 centroid;
-
-		uniform float animate;
-		uniform float scale;
-
-		#define PI 3.14159265359;
+		uniform float amplitude;
 
 		void main() {
-			float theta = (1.0 - animate) * (PI * 1.5) * sign(centroid.x);
-			mat3 rotMat = mat3(
-				vec3(cos(theta), 0.0, sin(theta)),
-				vec3(0.0, 1.0, 0.0),
-				vec3(-sin(theta), 0.0, cos(theta))
-			);
-			
-			vec3 offset = mix(vec3(0.0), direction.xyz * rotMat, 1.0 - animate);
-			vec3 tPos = mix(centroid.xyz, position.xyz, scale) + offset;
-			
-			gl_Position = projectionMatrix *
-				modelViewMatrix *
-				vec4(tPos, 1.0);
+			vec3 tPos = position + direction * amplitude;
+			gl_Position = projectionMatrix * modelViewMatrix * vec4(tPos, 1.0);
 		}
-*/
   `
 }
 
@@ -100,6 +89,23 @@ function fragmentShader() {
 		}
   `
 }
+
+function getDirections( position ) {
+	const directions = []
+
+	return {
+    direction: { type: 'v3', value: directions }
+  }
+}
+
+const material = new THREE.ShaderMaterial( {
+	fragmentShader: fragmentShader(),
+	vertexShader: vertexShader(),
+	side: THREE.DoubleSide,
+	uniforms: {
+		amplitude: { type: 'f', value: 0 },
+	}
+} )
 
 logoLoader.load(
 
@@ -112,38 +118,11 @@ logoLoader.load(
 		for ( let i = 0; i < paths.length; i ++ ) {
 
 			const path = paths[ i ]
-
-			const material = new THREE.ShaderMaterial( {
-				fragmentShader: fragmentShader(),
-				vertexShader: vertexShader(),
-				side: THREE.DoubleSide,
-				uniforms: {
-					scale: { type: 'f', value: 0 },
-					animate: { type: 'f', value: 0 }
-				}
-			} )
-
 			const shapes = SVGLoader.createShapes( path )
+			const geometry = new THREE.ShapeGeometry( shapes, 5 )
+			const mesh = new THREE.Mesh( geometry, material )
 
-			for ( let j = 0; j < shapes.length; j ++ ) {
-
-				const shape = shapes[ j ]
-				const geometry = new THREE.ShapeGeometry( shape )
-				const triangles = Earcut.triangulate(
-						geometry.attributes.position.array,
-						null,
-						3
-					)
-				triangulated = triangulated.concat( triangles )
-
-				const triGeo = new THREE.BufferGeometry
-				triGeo.setAttribute( 'position', new THREE.BufferAttribute( triangulated, 3 ) )
-
-				const mesh = new THREE.Mesh( geometry, material )
-
-				logo.add( mesh )
-				console.log(triGeo)
-			}
+			logo.add( mesh )
 
 		}
 		
@@ -154,11 +133,11 @@ logoLoader.load(
     logo.position.set( -logoWidth * .005, 10, 0 )
 		
     scene.add( logo )
+		console.log(logo)
     
 	}
 
 )
-
 
 /////////////////// TEXT: QUOTES
 
