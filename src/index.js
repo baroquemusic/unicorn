@@ -88,15 +88,15 @@ function fragmentShader() {
 
 function random( out ) {
 
-	var scale = 1.0
+	var scale = Math.random() * 1000
 
-	var r = Math.random() * 2.0 * Math.PI
-	var z = ( Math.random() * 2.0 ) - 1.0
-	var zScale = Math.sqrt( 1.0 - z * z ) * scale
+	var r = Math.random() * 2 * Math.PI
+	var z = ( Math.random() * 2 ) - 1
+	var zScale = Math.sqrt( 1 - z * z ) * scale
 
-	out.x = Math.cos( r ) * zScale
-	out.y = Math.sin( r ) * zScale
-	out.z = z * scale
+	out.x += Math.cos( r ) * zScale
+	out.y += Math.sin( r ) * zScale
+	out.z += z * scale
 
 	return out
 
@@ -281,6 +281,8 @@ function onMouseWheel( event ) {
 	else if( scroll < 0 && scrollPos > 0 ) { scrollPos -= 1	}
 
 	console.log(scrollPos)
+
+	material.uniforms.amplitude.value = scrollPos / 10
 
 	if( scrollPos < 8 ) {
 
