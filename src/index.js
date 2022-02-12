@@ -57,18 +57,14 @@ const logoLoader = new SVGLoader
 const logo = new THREE.Object3D
 let logoWidth
 
-function random(out, scale) {
-    scale = scale || 1.0
-
-    var r = Math.random() * 2.0 * Math.PI
-    var z = (Math.random() * 2.0) - 1.0
-    var zScale = Math.sqrt(1.0-z*z) * scale
-
-    out[0] = Math.cos(r) * zScale
-    out[1] = Math.sin(r) * zScale
-    out[2] = z * scale
-    return out
-}
+const material = new THREE.ShaderMaterial( {
+	fragmentShader: fragmentShader(),
+	vertexShader: vertexShader(),
+	side: THREE.DoubleSide,
+	uniforms: {
+		amplitude: { type: 'f', value: 0 },
+	}
+} )
 
 function vertexShader() {
   return `
@@ -90,36 +86,51 @@ function fragmentShader() {
   `
 }
 
-function getDirections( position ) {
-	const directions = []
+function random( out ) {
 
-	return {
-    direction: { type: 'v3', value: directions }
-  }
+	var scale = 1.0
+
+	var r = Math.random() * 2.0 * Math.PI
+	var z = ( Math.random() * 2.0 ) - 1.0
+	var zScale = Math.sqrt( 1.0 - z * z ) * scale
+
+	out.x = Math.cos( r ) * zScale
+	out.y = Math.sin( r ) * zScale
+	out.z = z * scale
+
+	return out
+
 }
-
-const material = new THREE.ShaderMaterial( {
-	fragmentShader: fragmentShader(),
-	vertexShader: vertexShader(),
-	side: THREE.DoubleSide,
-	uniforms: {
-		amplitude: { type: 'f', value: 0 },
-	}
-} )
 
 logoLoader.load(
 
 	unicornLogo,
 
-	function ( data ) {
+	function( data ) {
 
 		const paths = data.paths
 
-		for ( let i = 0; i < paths.length; i ++ ) {
+		for( let i = 0; i < paths.length; i++ ) {
 
 			const path = paths[ i ]
 			const shapes = SVGLoader.createShapes( path )
 			const geometry = new THREE.ShapeGeometry( shapes, 5 )
+			const length = geometry.attributes.position.array.length
+			geometry.setAttribute( 
+				'direction',
+				new THREE.Float32BufferAttribute( new Float32Array( length ), 3 )
+			)
+
+			for( let j = 0; j < length; j += 3 ) {
+
+				const rand = random( new THREE.Vector3() )
+
+				geometry.attributes.direction.array[ j ] = rand.x
+				geometry.attributes.direction.array[ j + 1 ] = rand.y
+				geometry.attributes.direction.array[ j + 2 ] = rand.z
+
+			}
+
 			const mesh = new THREE.Mesh( geometry, material )
 
 			logo.add( mesh )
