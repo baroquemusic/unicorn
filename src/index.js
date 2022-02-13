@@ -124,21 +124,15 @@ logoLoader.load(
 				)
 			)
 
-			for( let j = 0; j < length; j += 9 ) {
+			// for( let j = 0; j < length; j += 3 ) {
 
-				const rand = random( new THREE.Vector3 )
+			// 	const rand = random( new THREE.Vector3 )
 
-				geometry.attributes.direction.array[ j ] = rand.x
-				geometry.attributes.direction.array[ j + 1 ] = rand.y
-				geometry.attributes.direction.array[ j + 2 ] = rand.z
-				geometry.attributes.direction.array[ j + 3 ] = rand.x
-				geometry.attributes.direction.array[ j + 4 ] = rand.y
-				geometry.attributes.direction.array[ j + 5 ] = rand.z
-				geometry.attributes.direction.array[ j + 6 ] = rand.x
-				geometry.attributes.direction.array[ j + 7 ] = rand.y
-				geometry.attributes.direction.array[ j + 8 ] = rand.z
+			// 	geometry.attributes.direction.array[ j ] = rand.x
+			// 	geometry.attributes.direction.array[ j + 1 ] = rand.y
+			// 	geometry.attributes.direction.array[ j + 2 ] = rand.z
 
-			}
+			// }
 
 			const mesh = new THREE.Mesh( geometry, material )
 
