@@ -115,14 +115,15 @@ logoLoader.load(
 			const path = paths[ i ]
 			const shapes = SVGLoader.createShapes( path )
 			const geometry = new THREE.ShapeGeometry( shapes, 5 )
-			const length = geometry.attributes.position.array.length
-			geometry.setAttribute( 
-				'direction',
-				new THREE.Float32BufferAttribute( 
-					new Float32Array( length ), 
-					3
-				)
-			)
+
+			// const length = geometry.attributes.position.array.length
+			// geometry.setAttribute( 
+			// 	'direction',
+			// 	new THREE.Float32BufferAttribute( 
+			// 		new Float32Array( length ), 
+			// 		3
+			// 	)
+			// )
 
 			// for( let j = 0; j < length; j += 3 ) {
 
