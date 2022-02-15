@@ -58,12 +58,14 @@ const logo = new THREE.Object3D
 let logoWidth
 
 const material = new THREE.ShaderMaterial( {
+
 	fragmentShader: fragmentShader(),
 	vertexShader: vertexShader(),
 	side: THREE.DoubleSide,
 	uniforms: {
-		amplitude: { type: 'f', value: 0 },
+		amplitude: { type: 'f', value: 0 }
 	}
+
 } )
 
 function vertexShader() {
@@ -72,8 +74,8 @@ function vertexShader() {
 		uniform float amplitude;
 
 		void main() {
-			vec3 newPos = position + direction * amplitude;
-			gl_Position = projectionMatrix * modelViewMatrix * vec4( newPos, 1.0 );
+			vec3 tPos = position + direction * amplitude;
+			gl_Position = projectionMatrix * modelViewMatrix * vec4( tPos, 1.0 );
 		}
   `
 }
@@ -116,24 +118,30 @@ logoLoader.load(
 			const shapes = SVGLoader.createShapes( path )
 			const geometry = new THREE.ShapeGeometry( shapes, 5 )
 
-			// const length = geometry.attributes.position.array.length
-			// geometry.setAttribute( 
-			// 	'direction',
-			// 	new THREE.Float32BufferAttribute( 
-			// 		new Float32Array( length ), 
-			// 		3
-			// 	)
-			// )
+			const length = geometry.attributes.position.array.length
+			geometry.setAttribute( 
+				'direction',
+				new THREE.Float32BufferAttribute( 
+					new Float32Array( length ), 
+					3
+				)
+			)
 
-			// for( let j = 0; j < length; j += 3 ) {
+			for( let j = 0; j < length; j += 9 ) {
 
-			// 	const rand = random( new THREE.Vector3 )
+				const rand = random( new THREE.Vector3 )
 
-			// 	geometry.attributes.direction.array[ j ] = rand.x
-			// 	geometry.attributes.direction.array[ j + 1 ] = rand.y
-			// 	geometry.attributes.direction.array[ j + 2 ] = rand.z
+				geometry.attributes.direction.array[ j ] = rand.x
+				geometry.attributes.direction.array[ j + 1 ] = rand.y
+				geometry.attributes.direction.array[ j + 2 ] = rand.z
+				geometry.attributes.direction.array[ j + 3 ] = rand.x
+				geometry.attributes.direction.array[ j + 4 ] = rand.y
+				geometry.attributes.direction.array[ j + 5 ] = rand.z
+				geometry.attributes.direction.array[ j + 6 ] = rand.x
+				geometry.attributes.direction.array[ j + 7 ] = rand.y
+				geometry.attributes.direction.array[ j + 8 ] = rand.z
 
-			// }
+			}
 
 			const mesh = new THREE.Mesh( geometry, material )
 
