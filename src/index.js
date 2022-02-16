@@ -3,7 +3,6 @@ import * as THREE from 'three'
 import { LoadingManager } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader'
-import { Earcut } from 'three/src/extras/Earcut'
 import { Text } from 'troika-three-text'
 import unicornLogo from './assets/unicorn-logo.svg'
 import font from './assets/fonts/Philosopher.woff'
@@ -12,6 +11,11 @@ import blockChain from './assets/glb/block.glb'
 import deepLearning from './assets/glb/deep.glb'
 import extendedReality from './assets/glb/extended.glb'
 import interactive3D from './assets/glb/interact.glb'
+import triangleCentroid from 'triangle-centroid'
+import reindex from 'mesh-reindex'
+import unindex from 'unindex-mesh'
+import loadSvg from 'load-svg'
+import { parse as getSvgPaths } from 'extract-svg-path'
 
 const renderer = new THREE.WebGLRenderer( { antialias: true } )
 renderer.setSize( window.innerWidth, window.innerHeight )
@@ -51,7 +55,133 @@ function onMouseMove( event ) {
 
 }
 
+////////////////////////////////////////
+
+var parseSVG = require('parse-svg-path')
+
+function svgMesh3d (svgPath, opt) {
+  if (typeof svgPath !== 'string') {
+    throw new TypeError('must provide a string as first parameter')
+  }
+  
+  opt = assign({
+    delaunay: true,
+    clean: true,
+    exterior: false,
+    randomization: 0,
+    simplify: 0,
+    scale: 1
+  }, opt)
+  
+  var i
+  // parse string as a list of operations
+  var svg = parseSVG(svgPath)
+  
+  // convert curves into discrete points
+  var contours = getContours(svg, opt.scale)
+  
+  // optionally simplify the path for faster triangulation and/or aesthetics
+  if (opt.simplify > 0 && typeof opt.simplify === 'number') {
+    for (i = 0; i < contours.length; i++) {
+      contours[i] = simplify(contours[i], opt.simplify)
+    }
+  }
+  
+  // prepare for triangulation
+  var polyline = denestPolyline(contours)
+  var positions = polyline.positions
+  var bounds = getBounds(positions)
+
+  // optionally add random points for aesthetics
+  var randomization = opt.randomization
+  if (typeof randomization === 'number' && randomization > 0) {
+    addRandomPoints(positions, bounds, randomization)
+  }
+  
+  var loops = polyline.edges
+  var edges = []
+  for (i = 0; i < loops.length; ++i) {
+    var loop = loops[i]
+    for (var j = 0; j < loop.length; ++j) {
+      edges.push([loop[j], loop[(j + 1) % loop.length]])
+    }
+  }
+
+  // this updates points/edges so that they now form a valid PSLG 
+  if (opt.clean !== false) {
+    cleanPSLG(positions, edges)
+  }
+
+  // triangulate mesh
+  var cells = cdt2d(positions, edges, opt)
+
+  // rescale to [-1 ... 1]
+  if (opt.normalize !== false) {
+    normalize(positions, bounds)
+  }
+
+  // convert to 3D representation and flip on Y axis for convenience w/ OpenGL
+  to3D(positions)
+
+  return {
+    positions: positions,
+    cells: cells
+  }
+}
+
+function to3D (positions) {
+  for (var i = 0; i < positions.length; i++) {
+    var xy = positions[i]
+    xy[1] *= -1
+    xy[2] = xy[2] || 0
+  }
+}
+
+function addRandomPoints (positions, bounds, count) {
+  var min = bounds[0]
+  var max = bounds[1]
+
+  for (var i = 0; i < count; i++) {
+    positions.push([ // random [ x, y ]
+      random(min[0], max[0]),
+      random(min[1], max[1])
+    ])
+  }
+}
+
+function denestPolyline (nested) {
+  var positions = []
+  var edges = []
+
+  for (var i = 0; i < nested.length; i++) {
+    var path = nested[i]
+    var loop = []
+    for (var j = 0; j < path.length; j++) {
+      var pos = path[j]
+      var idx = positions.indexOf(pos)
+      if (idx === -1) {
+        positions.push(pos)
+        idx = positions.length - 1
+      }
+      loop.push(idx)
+    }
+    edges.push(loop)
+  }
+  return {
+    positions: positions,
+    edges: edges
+  }
+}
+
+
+
+
+
 ///////////////// LOGO
+
+
+
+
 
 const logoLoader = new SVGLoader
 const logo = new THREE.Object3D
@@ -88,7 +218,7 @@ function fragmentShader() {
   `
 }
 
-function random( out ) {
+function randomX( out ) {
 
 	var scale = Math.random() * 1000
 
@@ -103,6 +233,14 @@ function random( out ) {
 	return out
 
 }
+
+let svgPath
+
+loadSvg( unicornLogo, ( err, svg ) => {
+	if( err ) throw err
+	svgPath = getSvgPaths( svg )
+} )
+console.log(svgPath)
 
 logoLoader.load(
 
@@ -129,7 +267,7 @@ logoLoader.load(
 
 			for( let j = 0; j < length; j += 9 ) {
 
-				const rand = random( new THREE.Vector3 )
+				const rand = randomX( new THREE.Vector3 )
 
 				geometry.attributes.direction.array[ j ] = rand.x
 				geometry.attributes.direction.array[ j + 1 ] = rand.y
@@ -156,7 +294,7 @@ logoLoader.load(
     logo.position.set( -logoWidth * .005, 10, 0 )
 		
     scene.add( logo )
-		console.log(logo)
+		//console.log(logo)
     
 	}
 

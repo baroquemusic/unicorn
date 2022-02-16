@@ -10,11 +10,17 @@
   "author": "Gabor Kovacs",
   "license": "ISC",
   "devDependencies": {
+    "extract-svg-path": "^2.1.0",
     "html-webpack-plugin": "^5.5.0",
+    "load-svg": "^1.0.0",
+    "mesh-reindex": "^1.0.0",
+    "parse-svg-path": "^0.1.2",
+    "svg-mesh-3d": "^1.1.0",
     "three": "^0.136.0",
     "three-bas": "^2.13.0",
     "triangle-centroid": "^1.0.0",
     "troika-three-text": "^0.45.0",
+    "unindex-mesh": "^2.0.0",
     "webpack": "^5.65.0",
     "webpack-cli": "^4.9.1",
     "webpack-dev-server": "^4.7.2"

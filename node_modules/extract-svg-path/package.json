@@ -1,0 +1,52 @@
+{
+  "name": "extract-svg-path",
+  "version": "2.1.0",
+  "description": "extracts a string of subpaths from an svg file",
+  "main": "index.js",
+  "browser": "browser.js",
+  "license": "MIT",
+  "author": {
+    "name": "Matt DesLauriers",
+    "email": "dave.des@gmail.com",
+    "url": "https://github.com/mattdesl"
+  },
+  "dependencies": {
+    "cheerio": "^0.17.0",
+    "jsesc": "^0.5.0",
+    "object-assign": "^4.0.1",
+    "static-module": "^1.1.3",
+    "through2": "^2.0.0",
+    "xml-parse-from-string": "^1.0.0"
+  },
+  "devDependencies": {
+    "brfs": "^1.4.1",
+    "browserify": "^11.2.0",
+    "budo": "^5.1.1",
+    "garnish": "^3.2.1",
+    "load-svg": "^1.0.0",
+    "tape": "^4.2.1",
+    "xhr": "^1.17.0"
+  },
+  "scripts": {
+    "test": "tape test/test.js test/test-transform.js",
+    "test-browser": "budo test/test-browser.js:bundle.js --dir test -- -t brfs -t ./transform.js | garnish"
+  },
+  "keywords": [
+    "svg",
+    "extract",
+    "path",
+    "paths",
+    "vector",
+    "format",
+    "file",
+    "parse"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mattdesl/extract-svg-path.git"
+  },
+  "homepage": "https://github.com/mattdesl/extract-svg-path",
+  "bugs": {
+    "url": "https://github.com/mattdesl/extract-svg-path/issues"
+  }
+}
