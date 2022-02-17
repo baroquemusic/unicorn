@@ -57,7 +57,18 @@ function onMouseMove( event ) {
 
 ////////////////////////////////////////
 
+
+
 var parseSVG = require('parse-svg-path')
+var getContours = require('svg-path-contours')
+var cdt2d = require('cdt2d')
+var getBounds = require('bound-points')
+var normalize = require('normalize-path-scale')
+var random = require('random-float')
+var assign = require('object-assign')
+var simplify = require('simplify-path')
+
+const createGeom = require('three-simplicial-complex')(THREE)
 
 function svgMesh3d (svgPath, opt) {
   if (typeof svgPath !== 'string') {
@@ -108,9 +119,9 @@ function svgMesh3d (svgPath, opt) {
   }
 
   // this updates points/edges so that they now form a valid PSLG 
-  if (opt.clean !== false) {
-    cleanPSLG(positions, edges)
-  }
+  // if (opt.clean !== false) {
+  //   cleanPSLG(positions, edges)
+  // }
 
   // triangulate mesh
   var cells = cdt2d(positions, edges, opt)
@@ -174,6 +185,25 @@ function denestPolyline (nested) {
 }
 
 
+function getAnimationAttributes (positions, cells) {
+  const directions = []
+  const centroids = []
+  for (let i=0; i<cells.length; i++) {
+    const [ f0, f1, f2 ] = cells[i]
+    const triangle = [ positions[f0], positions[f1], positions[f2] ]
+    const center = triangleCentroid(triangle)
+    const dir = new THREE.Vector3().fromArray(center)
+    centroids.push(dir, dir, dir)
+    
+    const random = randomVec3([], Math.random())
+    const anim = new THREE.Vector3().fromArray(random)
+    directions.push(anim, anim, anim)
+  }
+  return {
+    direction: { type: 'v3', value: directions },
+    centroid: { type: 'v3', value: centroids }
+  }
+}
 
 
 
@@ -235,12 +265,36 @@ function randomX( out ) {
 }
 
 let svgPath
+let complex
 
-loadSvg( unicornLogo, ( err, svg ) => {
-	if( err ) throw err
+loadSvg( unicornLogo, (err, svg) => {
+	if(err) throw err
 	svgPath = getSvgPaths( svg )
+	complex = svgMesh3d( svgPath, {
+    scale: 10,
+    simplify: .01
+  } )
+	console.log(complex)
+	complex = reindex(unindex(complex.positions, complex.cells))
+	const attributes = getAnimationAttributes(complex.positions, complex.cells)
+  const geometry = new createGeom(complex)
+  
+  // our shader material
+  const material = new THREE.ShaderMaterial({
+    color: 0xffffff,
+    side: THREE.DoubleSide,
+    vertexShader: vertShader,
+    fragmentShader: fragShader,
+    wireframe: wireframe,
+    transparent: true,
+    attributes: attributes,
+    uniforms: {
+      opacity: { type: 'f', value: 1 },
+      scale: { type: 'f', value: 0 },
+      animate: { type: 'f', value: 0 }
+    }
+  })
 } )
-console.log(svgPath)
 
 logoLoader.load(
 
