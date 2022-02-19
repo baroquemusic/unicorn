@@ -11,6 +11,7 @@ import blockChain from './assets/glb/block.glb'
 import deepLearning from './assets/glb/deep.glb'
 import extendedReality from './assets/glb/extended.glb'
 import interactive3D from './assets/glb/interact.glb'
+import { Earcut } from 'three/src/extras/Earcut'
 
 const renderer = new THREE.WebGLRenderer( { antialias: true } )
 renderer.setSize( window.innerWidth, window.innerHeight )
@@ -87,9 +88,9 @@ function fragmentShader() {
   `
 }
 
-function randomX( out ) {
+function random( out ) {
 
-	var scale = Math.random() * 1000
+	var scale = 1000 + Math.random() * 1000
 
 	var r = Math.random() * 2 * Math.PI
 	var z = ( Math.random() * 2 ) - 1
@@ -116,7 +117,6 @@ logoLoader.load(
 			const path = paths[ i ]
 			const shapes = SVGLoader.createShapes( path )
 			const geometry = new THREE.ShapeGeometry( shapes, 5 )
-
 			const length = geometry.attributes.position.array.length
 			geometry.setAttribute( 
 				'direction',
@@ -128,7 +128,7 @@ logoLoader.load(
 
 			for( let j = 0; j < length; j += 9 ) {
 
-				const rand = randomX( new THREE.Vector3 )
+				const rand = random( new THREE.Vector3 )
 
 				geometry.attributes.direction.array[ j ] = rand.x
 				geometry.attributes.direction.array[ j + 1 ] = rand.y
