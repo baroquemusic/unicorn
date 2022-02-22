@@ -107,7 +107,7 @@ logoLoader.load(
     logo.position.set( -logoWidth * .005, 10, 0 )
 		
     scene.add( logo )
-		//console.log(logo)
+		console.log(logo)
     
 	}
 
@@ -244,8 +244,6 @@ function onMouseWheel( event ) {
 	else if( scroll < 0 && scrollPos > 0 ) { scrollPos -= 1	}
 
 	console.log(scrollPos)
-
-	material.uniforms.amplitude.value = scrollPos / 10
 
 	if( scrollPos < 8 ) {
 
