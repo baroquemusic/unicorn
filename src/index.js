@@ -12,6 +12,7 @@ import deepLearning from './assets/glb/deep.glb'
 import extendedReality from './assets/glb/extended.glb'
 import interactive3D from './assets/glb/interact.glb'
 import { Earcut } from 'three/src/extras/Earcut'
+import { TessellateModifier } from 'three/examples/jsm/modifiers/TessellateModifier.js'
 
 const renderer = new THREE.WebGLRenderer( { antialias: true } )
 renderer.setSize( window.innerWidth, window.innerHeight )
@@ -61,23 +62,43 @@ const material = new THREE.ShaderMaterial( {
 
 	fragmentShader: fragmentShader(),
 	vertexShader: vertexShader(),
-	side: THREE.DoubleSide
+	side: THREE.DoubleSide,
+	uniforms: {
+		amp: { value: 0.0 }
+	}
 
 } )
 
 function vertexShader() {
+
   return `
+
+		uniform float amp;
+		attribute vec3 dis;
+		varying vec3 nor;
+
 		void main() {
-			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+			
+			nor = normal;
+			vec3 newPos = position + nor * amp * dis;
+
+			gl_Position = projectionMatrix * modelViewMatrix * vec4( newPos, 1.0 );
+
 		}
+
   `
 }
 
 function fragmentShader() {
+
   return `
+
 		void main() {
+
 			gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+
 		}
+
   `
 }
 
@@ -88,27 +109,49 @@ logoLoader.load(
 	function( data ) {
 
 		const paths = data.paths
+		const tessGeo = new TessellateModifier( 8, 6 )
 
 		for( let i = 0; i < paths.length; i++ ) {
 
 			const path = paths[ i ]
 			const shapes = SVGLoader.createShapes( path )
-			const geometry = new THREE.ShapeGeometry( shapes, 5 )
-			const mesh = new THREE.Mesh( geometry, material )
+			var geometry = new THREE.ShapeGeometry( shapes, 5 )
+			geometry = tessGeo.modify( geometry )
+			var numFaces = geometry.attributes.position.count / 3
+			var dis = new Float32Array( numFaces * 9 )
 
+			for( let j = 0; j < numFaces; j++ ) {
+
+				var ix = j * 9
+
+				const d = 10 * .5 - Math.random()
+
+				for( let k = 0; k < 3; k++ ) {
+
+					dis[ ix + 3 * k ] = d
+					dis[ ix + 3 * k + 1 ] = d
+					dis[ ix + 3 * k + 2 ] = d
+
+				}
+
+			}
+
+			geometry.setAttribute( 'dis', new THREE.BufferAttribute( dis, 3 ) )
+
+			const mesh = new THREE.Mesh( geometry, material )
 			logo.add( mesh )
 
 		}
-		
+
 		const bbLogo = new THREE.Box3().setFromObject( logo )
 		logoWidth = bbLogo.max.x
     logo.rotation.y = logo.rotation.z = Math.PI
     logo.scale.set( .01, .01, -.01 )
     logo.position.set( -logoWidth * .005, 10, 0 )
-		
+
     scene.add( logo )
 		console.log(logo)
-    
+
 	}
 
 )
@@ -242,6 +285,8 @@ function onMouseWheel( event ) {
 
 	if( scroll > 0 ) { scrollPos += 1	} 
 	else if( scroll < 0 && scrollPos > 0 ) { scrollPos -= 1	}
+
+	material.uniforms.amp.value = scrollPos
 
 	console.log(scrollPos)
 
