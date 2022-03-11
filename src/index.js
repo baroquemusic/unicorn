@@ -11,7 +11,6 @@ import blockChain from './assets/glb/block.glb'
 import deepLearning from './assets/glb/deep.glb'
 import extendedReality from './assets/glb/extended.glb'
 import interactive3D from './assets/glb/interact.glb'
-import { Earcut } from 'three/src/extras/Earcut'
 import { TessellateModifier } from 'three/examples/jsm/modifiers/TessellateModifier.js'
 
 const renderer = new THREE.WebGLRenderer( { antialias: true } )
@@ -62,10 +61,7 @@ const material = new THREE.ShaderMaterial( {
 
 	fragmentShader: fragmentShader(),
 	vertexShader: vertexShader(),
-	side: THREE.DoubleSide,
-	uniforms: {
-		amp: { value: 0.0 }
-	}
+	uniforms: { amp: { value: 0.0 } }
 
 } )
 
@@ -75,12 +71,10 @@ function vertexShader() {
 
 		uniform float amp;
 		attribute vec3 dis;
-		varying vec3 nor;
 
 		void main() {
 			
-			nor = normal;
-			vec3 newPos = position + nor * amp * dis;
+			vec3 newPos = position + dis * amp;
 
 			gl_Position = projectionMatrix * modelViewMatrix * vec4( newPos, 1.0 );
 
@@ -102,6 +96,24 @@ function fragmentShader() {
   `
 }
 
+var out = []
+
+function random() {
+
+    var scale = 1000
+
+    var r = Math.random( 2 ) * Math.PI
+    var z = Math.random( 2 ) - 1
+    var zScale = Math.sqrt( 1 - z * z ) * scale
+
+    out[ 0 ] = Math.cos( r ) * zScale
+    out[ 1 ] = Math.sin( r ) * zScale
+    out[ 2 ] = z * scale
+
+    return out
+
+}
+
 logoLoader.load(
 
 	unicornLogo,
@@ -109,7 +121,7 @@ logoLoader.load(
 	function( data ) {
 
 		const paths = data.paths
-		const tessGeo = new TessellateModifier( 8, 6 )
+		const tessGeo = new TessellateModifier
 
 		for( let i = 0; i < paths.length; i++ ) {
 
@@ -117,6 +129,7 @@ logoLoader.load(
 			const shapes = SVGLoader.createShapes( path )
 			var geometry = new THREE.ShapeGeometry( shapes, 5 )
 			geometry = tessGeo.modify( geometry )
+			
 			var numFaces = geometry.attributes.position.count / 3
 			var dis = new Float32Array( numFaces * 9 )
 
@@ -124,13 +137,13 @@ logoLoader.load(
 
 				var ix = j * 9
 
-				const d = 10 * .5 - Math.random()
+				random()
 
 				for( let k = 0; k < 3; k++ ) {
 
-					dis[ ix + 3 * k ] = d
-					dis[ ix + 3 * k + 1 ] = d
-					dis[ ix + 3 * k + 2 ] = d
+					dis[ ix + 3 * k ] = out[ 0 ]
+					dis[ ix + 3 * k + 1 ] = out[ 1 ] - window.innerHeight / 2
+					dis[ ix + 3 * k + 2 ] = out[ 2 ]
 
 				}
 
@@ -150,7 +163,6 @@ logoLoader.load(
     logo.position.set( -logoWidth * .005, 10, 0 )
 
     scene.add( logo )
-		console.log(logo)
 
 	}
 
@@ -172,9 +184,6 @@ txtQuoteM.fontSize = txtQuoteL.fontSize = 1
 txtQuoteM.lineHeight = txtQuoteL.lineHeight = 1.5
 txtQuoteM.color = txtQuoteL.color = 0x000000
 
-scene.add( txtQuoteM )
-scene.add( txtQuoteL )
-
 let txtQuoteMX
 let txtQuoteMR
 
@@ -183,6 +192,7 @@ txtQuoteM.sync( () => {
   txtQuoteMX = txtQuoteM.geometry.boundingBox.max.x
 	txtQuoteM.curveRadius = txtQuoteMR = txtQuoteMX * Math.PI * 2
 	txtQuoteM.position.set( -txtQuoteMX - 3, -1, 0 )
+	scene.add( txtQuoteM )
 
 } )
 
@@ -196,6 +206,7 @@ txtQuoteL.sync( () => {
 	txtQuoteL.position.set( 3, -1, 0 )
 	txtQuoteL.anchorX = txtQuoteLX
 	txtQuoteL.position.x += txtQuoteLX
+	scene.add( txtQuoteL )
 
 } )
 
@@ -273,6 +284,49 @@ gltfLoader.load( blockChain, ( a ) => {
 
 scene.add( objects )
 
+//////////// EMAIL
+
+const e = new Text
+
+const eMaterial = new THREE.ShaderMaterial( {
+
+	fragmentShader: fragmentShader(),
+	vertexShader: vertexShader(),
+	uniforms: { amp: { value: 0.0 } }
+
+} )
+
+e.text = 'hi@unicorn3d.com'
+e.font = font
+e.fontSize = 3
+e.glyphGeometryDetail = 3
+e.material = eMaterial
+
+
+const tessGeoE = new TessellateModifier
+
+e.sync( () => {
+
+	e.position.set( 
+	
+		e.geometry.boundingBox.max.x * -.5, 
+		e.geometry.boundingBox.min.y * -.5,
+		0 
+	
+		)
+
+		var geometry = e.geometry
+		geometry = tessGeoE.modify( geometry )
+console.log(e/*.geometry.attributes.aTroikaGlyphBounds.array.length*/)
+
+		scene.add( e )
+
+} )
+
+
+
+
+
 //////////////// SCROLL
 
 let scrollPos = 0
@@ -286,9 +340,9 @@ function onMouseWheel( event ) {
 	if( scroll > 0 ) { scrollPos += 1	} 
 	else if( scroll < 0 && scrollPos > 0 ) { scrollPos -= 1	}
 
-	material.uniforms.amp.value = scrollPos
-
 	console.log(scrollPos)
+
+eMaterial.uniforms.amp.value = ( scrollPos - 0 ) * 1
 
 	if( scrollPos < 8 ) {
 
@@ -361,6 +415,8 @@ function onMouseWheel( event ) {
 
 	} else {
 
+		material.uniforms.amp.value = ( scrollPos - 50 ) * .1
+
 		services.rotation.z = -Math.PI / 22.5 * scrollPos
 		objects.rotation.z = -Math.PI / 22.5 * scrollPos - ( 36 * ( Math.PI / 180 ) )
 		objects.scale.x = objects.scale.y =
@@ -419,7 +475,7 @@ function animate() {
 
 	// for ( let i = 0; i < intersects.length; i ++ ) {
 
-	// 	intersects[ i ].object.material.color.set( 0xaaaaaa )
+	// 	intersects[ i ].object.material.color.set( 0xff0000 )
 
 	// }
 
