@@ -4,14 +4,17 @@ import { LoadingManager } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader'
 import { Text } from 'troika-three-text'
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
+import { TessellateModifier } from 'three/examples/jsm/modifiers/TessellateModifier.js'
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
 import unicornLogo from './assets/unicorn-logo.svg'
 import font from './assets/fonts/Philosopher.woff'
+import fontJson from './assets/fonts/Philosopher.json'
 import appDevelopment from './assets/glb/app.glb'
 import blockChain from './assets/glb/block.glb'
 import deepLearning from './assets/glb/deep.glb'
 import extendedReality from './assets/glb/extended.glb'
 import interactive3D from './assets/glb/interact.glb'
-import { TessellateModifier } from 'three/examples/jsm/modifiers/TessellateModifier.js'
 
 const renderer = new THREE.WebGLRenderer( { antialias: true } )
 renderer.setSize( window.innerWidth, window.innerHeight )
@@ -114,6 +117,8 @@ function random() {
 
 }
 
+const tessGeo = new TessellateModifier
+
 logoLoader.load(
 
 	unicornLogo,
@@ -121,7 +126,6 @@ logoLoader.load(
 	function( data ) {
 
 		const paths = data.paths
-		const tessGeo = new TessellateModifier
 
 		for( let i = 0; i < paths.length; i++ ) {
 
@@ -286,7 +290,22 @@ scene.add( objects )
 
 //////////// EMAIL
 
-const e = new Text
+const fontLoader = new FontLoader
+
+let eGeometry
+
+fontLoader.load( 'Philosopher.json', ( font ) => {
+
+	eGeometry = new TextGeometry( 'hi@unicorn3d.com', {
+
+		font: font
+		
+	} )
+
+	//eGeometry = tessGeo.modify( eGeometry )
+
+} )
+
 
 const eMaterial = new THREE.ShaderMaterial( {
 
@@ -296,36 +315,10 @@ const eMaterial = new THREE.ShaderMaterial( {
 
 } )
 
-e.text = 'hi@unicorn3d.com'
-e.font = font
-e.fontSize = 3
-e.glyphGeometryDetail = 3
-e.material = eMaterial
+let e = new THREE.Mesh( eGeometry, eMaterial )
 
-
-const tessGeoE = new TessellateModifier
-
-e.sync( () => {
-
-	e.position.set( 
-	
-		e.geometry.boundingBox.max.x * -.5, 
-		e.geometry.boundingBox.min.y * -.5,
-		0 
-	
-		)
-
-		var geometry = e.geometry
-		geometry = tessGeoE.modify( geometry )
-console.log(e/*.geometry.attributes.aTroikaGlyphBounds.array.length*/)
-
-		scene.add( e )
-
-} )
-
-
-
-
+scene.add( e )
+console.log(e)
 
 //////////////// SCROLL
 

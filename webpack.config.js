@@ -24,7 +24,7 @@ module.exports = {
   },
   module: {
     rules: [
-      { test: /\.(woff|glb|jpg|png|svg|ico|webp|jpeg|gif)$/, type: 'asset/resource' },
+      { test: /\.(woff|json|glb|jpg|png|svg|ico|webp|jpeg|gif)$/, type: 'asset/resource' },
     ]
   },
   plugins: [
