@@ -1,209 +1,232 @@
 
-`
-      uniform float amplitude;
 
-			attribute vec3 customColor;
-			attribute vec3 displacement;
-
-			varying vec3 vNormal;
-			varying vec3 vColor;
-
-			void main() {
-
-				vNormal = normal;
-				vColor = customColor;
-
-				vec3 newPosition = position + normal * amplitude * displacement;
-				gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );
-
-			}
-
-/////////////////////////////////
-
-			varying vec3 vNormal;
-			varying vec3 vColor;
-
-			void main() {
-
-				const float ambient = 0.4;
-
-				vec3 light = vec3( 1.0 );
-				light = normalize( light );
-
-				float directional = max( dot( vNormal, light ), 0.0 );
-
-				gl_FragColor = vec4( ( directional + ambient ) * vColor, 1.0 );
-
-			}
-
-`
-      
-      
-      
-      import * as THREE from 'three';
+			import * as THREE from 'three';
 
 			import Stats from './jsm/libs/stats.module.js';
+			import { GUI } from './jsm/libs/lil-gui.module.min.js';
 
-			import { TrackballControls } from './jsm/controls/TrackballControls.js';
-			import { TessellateModifier } from './jsm/modifiers/TessellateModifier.js';
-			import { FontLoader } from './jsm/loaders/FontLoader.js';
-			import { TextGeometry } from './jsm/geometries/TextGeometry.js';
+			import { EffectComposer } from './jsm/postprocessing/EffectComposer.js';
+			import { RenderPass } from './jsm/postprocessing/RenderPass.js';
+			import { BokehPass } from './jsm/postprocessing/BokehPass.js';
 
-			let renderer, scene, camera, stats;
+			let camera, scene, renderer, stats,
+				singleMaterial, zmaterial,
+				parameters, nobjects, cubeMaterial;
 
-			let controls;
+			let mouseX = 0, mouseY = 0;
 
-			let mesh, uniforms;
+			let windowHalfX = window.innerWidth / 2;
+			let windowHalfY = window.innerHeight / 2;
 
-			const WIDTH = window.innerWidth;
-			const HEIGHT = window.innerHeight;
+			let width = window.innerWidth;
+			let height = window.innerHeight;
 
-			const loader = new FontLoader();
-			loader.load( 'fonts/helvetiker_bold.typeface.json', function ( font ) {
+			const materials = [], objects = [];
 
-				init( font );
-				animate();
+			const postprocessing = {};
 
-			} );
+			init();
+			animate();
 
-			function init( font ) {
+			function init() {
 
-				camera = new THREE.PerspectiveCamera( 40, WIDTH / HEIGHT, 1, 10000 );
-				camera.position.set( - 100, 100, 200 );
+				const container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				camera = new THREE.PerspectiveCamera( 70, width / height, 1, 3000 );
+				camera.position.z = 200;
 
 				scene = new THREE.Scene();
-				scene.background = new THREE.Color( 0x050505 );
 
-				//
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( width, height );
+				container.appendChild( renderer.domElement );
 
-				let geometry = new TextGeometry( 'THREE.JS', {
+				const path = 'textures/cube/SwedishRoyalCastle/';
+				const format = '.jpg';
+				const urls = [
+					path + 'px' + format, path + 'nx' + format,
+					path + 'py' + format, path + 'ny' + format,
+					path + 'pz' + format, path + 'nz' + format
+				];
 
-					font: font,
+				const textureCube = new THREE.CubeTextureLoader().load( urls );
 
-					size: 40,
-					height: 5,
-					curveSegments: 3,
+				parameters = { color: 0xff1100, envMap: textureCube };
+				cubeMaterial = new THREE.MeshBasicMaterial( parameters );
 
-					bevelThickness: 2,
-					bevelSize: 1,
-					bevelEnabled: true
+				singleMaterial = false;
 
-				} );
+				if ( singleMaterial ) zmaterial = [ cubeMaterial ];
 
-				geometry.center();
+				const geo = new THREE.SphereGeometry( 1, 20, 10 );
 
-				const tessellateModifier = new TessellateModifier( 8, 6 );
+				const xgrid = 14, ygrid = 9, zgrid = 14;
 
-				geometry = tessellateModifier.modify( geometry );
+				nobjects = xgrid * ygrid * zgrid;
 
-				//
+				const s = 60;
+				let count = 0;
 
-				const numFaces = geometry.attributes.position.count / 3;
+				for ( let i = 0; i < xgrid; i ++ ) {
 
-				const colors = new Float32Array( numFaces * 3 * 3 );
-				const displacement = new Float32Array( numFaces * 3 * 3 );
+					for ( let j = 0; j < ygrid; j ++ ) {
 
-				const color = new THREE.Color();
+						for ( let k = 0; k < zgrid; k ++ ) {
 
-				for ( let f = 0; f < numFaces; f ++ ) {
+							let mesh;
 
-					const index = 9 * f;
+							if ( singleMaterial ) {
 
-					const h = 0.2 * Math.random();
-					const s = 0.5 + 0.5 * Math.random();
-					const l = 0.5 + 0.5 * Math.random();
+								mesh = new THREE.Mesh( geo, zmaterial );
 
-					color.setHSL( h, s, l );
+							} else {
 
-					const d = 10 * ( 0.5 - Math.random() );
+								mesh = new THREE.Mesh( geo, new THREE.MeshBasicMaterial( parameters ) );
+								materials[ count ] = mesh.material;
 
-					for ( let i = 0; i < 3; i ++ ) {
+							}
 
-						colors[ index + ( 3 * i ) ] = color.r;
-						colors[ index + ( 3 * i ) + 1 ] = color.g;
-						colors[ index + ( 3 * i ) + 2 ] = color.b;
+							const x = 200 * ( i - xgrid / 2 );
+							const y = 200 * ( j - ygrid / 2 );
+							const z = 200 * ( k - zgrid / 2 );
 
-						displacement[ index + ( 3 * i ) ] = d;
-						displacement[ index + ( 3 * i ) + 1 ] = d;
-						displacement[ index + ( 3 * i ) + 2 ] = d;
+							mesh.position.set( x, y, z );
+							mesh.scale.set( s, s, s );
+
+							mesh.matrixAutoUpdate = false;
+							mesh.updateMatrix();
+
+							scene.add( mesh );
+							objects.push( mesh );
+
+							count ++;
+
+						}
 
 					}
 
 				}
 
-				geometry.setAttribute( 'customColor', new THREE.BufferAttribute( colors, 3 ) );
-				geometry.setAttribute( 'displacement', new THREE.BufferAttribute( displacement, 3 ) );
+				initPostprocessing();
 
-				//
-
-				uniforms = {
-
-					amplitude: { value: 0.0 }
-
-				};
-
-				const shaderMaterial = new THREE.ShaderMaterial( {
-
-					uniforms: uniforms,
-					vertexShader: document.getElementById( 'vertexshader' ).textContent,
-					fragmentShader: document.getElementById( 'fragmentshader' ).textContent
-
-				} );
-
-				//
-
-				mesh = new THREE.Mesh( geometry, shaderMaterial );
-
-				scene.add( mesh );
-
-				renderer = new THREE.WebGLRenderer( { antialias: true } );
-				renderer.setPixelRatio( window.devicePixelRatio );
-				renderer.setSize( WIDTH, HEIGHT );
-
-				const container = document.getElementById( 'container' );
-				container.appendChild( renderer.domElement );
-
-				controls = new TrackballControls( camera, renderer.domElement );
+				renderer.autoClear = false;
 
 				stats = new Stats();
 				container.appendChild( stats.dom );
 
-				//
+				container.style.touchAction = 'none';
+				container.addEventListener( 'pointermove', onPointerMove );
 
 				window.addEventListener( 'resize', onWindowResize );
+
+				const effectController = {
+
+					focus: 500.0,
+					aperture: 5,
+					maxblur: 0.01
+
+				};
+
+				const matChanger = function ( ) {
+
+					postprocessing.bokeh.uniforms[ 'focus' ].value = effectController.focus;
+					postprocessing.bokeh.uniforms[ 'aperture' ].value = effectController.aperture * 0.00001;
+					postprocessing.bokeh.uniforms[ 'maxblur' ].value = effectController.maxblur;
+
+				};
+
+				const gui = new GUI();
+				gui.add( effectController, 'focus', 10.0, 3000.0, 10 ).onChange( matChanger );
+				gui.add( effectController, 'aperture', 0, 10, 0.1 ).onChange( matChanger );
+				gui.add( effectController, 'maxblur', 0.0, 0.01, 0.001 ).onChange( matChanger );
+				gui.close();
+
+				matChanger();
+
+			}
+
+			function onPointerMove( event ) {
+
+				if ( event.isPrimary === false ) return;
+
+				mouseX = event.clientX - windowHalfX;
+				mouseY = event.clientY - windowHalfY;
 
 			}
 
 			function onWindowResize() {
 
-				camera.aspect = window.innerWidth / window.innerHeight;
+				windowHalfX = window.innerWidth / 2;
+				windowHalfY = window.innerHeight / 2;
+
+				width = window.innerWidth;
+				height = window.innerHeight;
+
+				camera.aspect = width / height;
 				camera.updateProjectionMatrix();
 
-				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setSize( width, height );
+				postprocessing.composer.setSize( width, height );
+
+			}
+
+			function initPostprocessing() {
+
+				const renderPass = new RenderPass( scene, camera );
+
+				const bokehPass = new BokehPass( scene, camera, {
+					focus: 1.0,
+					aperture: 0.025,
+					maxblur: 0.01,
+
+					width: width,
+					height: height
+				} );
+
+				const composer = new EffectComposer( renderer );
+
+				composer.addPass( renderPass );
+				composer.addPass( bokehPass );
+
+				postprocessing.composer = composer;
+				postprocessing.bokeh = bokehPass;
 
 			}
 
 			function animate() {
 
-				requestAnimationFrame( animate );
+				requestAnimationFrame( animate, renderer.domElement );
 
+				stats.begin();
 				render();
-
-				stats.update();
+				stats.end();
 
 			}
 
 			function render() {
 
-				const time = Date.now() * 0.001;
+				const time = Date.now() * 0.00005;
 
-				uniforms.amplitude.value = 1.0 + Math.sin( time * 0.5 );
+				camera.position.x += ( mouseX - camera.position.x ) * 0.036;
+				camera.position.y += ( - ( mouseY ) - camera.position.y ) * 0.036;
 
-				controls.update();
+				camera.lookAt( scene.position );
 
-				renderer.render( scene, camera );
+				if ( ! singleMaterial ) {
+
+					for ( let i = 0; i < nobjects; i ++ ) {
+
+						const h = ( 360 * ( i / nobjects + time ) % 360 ) / 360;
+						materials[ i ].color.setHSL( h, 1, 0.5 );
+
+					}
+
+				}
+
+				postprocessing.composer.render( 0.1 );
 
 			}
-
 
 		

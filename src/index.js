@@ -7,6 +7,9 @@ import { Text } from 'troika-three-text'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 import { TessellateModifier } from 'three/examples/jsm/modifiers/TessellateModifier.js'
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js'
 import unicornLogo from './assets/unicorn-logo.svg'
 import font from './assets/fonts/Philosopher.woff'
 import fontJson from './assets/fonts/Philosopher.json'
@@ -16,9 +19,15 @@ import deepLearning from './assets/glb/deep.glb'
 import extendedReality from './assets/glb/extended.glb'
 import interactive3D from './assets/glb/interact.glb'
 
+var scrLock = false
+
+const postprocessing = {}
+
 const renderer = new THREE.WebGLRenderer( { antialias: true } )
 renderer.setSize( window.innerWidth, window.innerHeight )
 document.body.appendChild( renderer.domElement )
+
+const composer = new EffectComposer( renderer )
 
 const camera = new THREE.PerspectiveCamera
   ( 45, window.innerWidth / window.innerHeight, 1, 1000 )
@@ -28,15 +37,25 @@ camera.lookAt( 0, 0, 0 )
 const scene = new THREE.Scene()
 scene.background = new THREE.Color( 'white' )
 
+const renderPass = new RenderPass( scene, camera )
+composer.addPass( renderPass )
+
 const manager = new THREE.LoadingManager
 
 const gltfLoader = new GLTFLoader( manager )
+
+let width, height
 
 function onWindowResize() {
 
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize( window.innerWidth, window.innerHeight )
+
+	width = window.innerWidth
+	height = window.innerHeight
+
+	postprocessing.composer.setSize( width, height )
 
 }
 
@@ -167,7 +186,7 @@ logoLoader.load(
     logo.position.set( -logoWidth * .005, 10, 0 )
 
     scene.add( logo )
-console.log(logo)
+
 	}
 
 )
@@ -211,6 +230,7 @@ txtQuoteL.sync( () => {
 	txtQuoteL.anchorX = txtQuoteLX
 	txtQuoteL.position.x += txtQuoteLX
 	scene.add( txtQuoteL )
+	scrLock = true
 
 } )
 
@@ -300,9 +320,11 @@ const eMaterial = new THREE.ShaderMaterial( {
 
 const fontLoader = new FontLoader
 
+var e
+
 fontLoader.load( 'Philosopher.json', ( font ) => {
 
-	let geometry = new TextGeometry( 'hi@unicorn3d.com', {
+	let geometry = new TextGeometry( 'Click to contact us\nhi@unicorn3d.com', {
 
 	 	font: font,
 		size: 2,
@@ -335,16 +357,11 @@ fontLoader.load( 'Philosopher.json', ( font ) => {
 
 	geometry.setAttribute( 'dis', new THREE.BufferAttribute( dis, 3 ) )
 
-	let e = new THREE.Mesh( geometry, eMaterial )
+	e = new THREE.Mesh( geometry, eMaterial )
 
 	eMaterial.uniforms.amp.value = 15000
 
 	scene.add( e )
-
-	const bb = new THREE.Box3().setFromObject( e )
-
-	e.position.x = -bb.max.x / 2
-	e.position.y = bb.max.y / 2
 
 } )
 
@@ -352,131 +369,205 @@ fontLoader.load( 'Philosopher.json', ( font ) => {
 
 let scrollPos = 0
 const smooth = 10
-let servRot
+let servRot, logoScale
 
 function onMouseWheel( event ) {
 
 	scroll = event.deltaY
 
-	if( scroll > 0 && scrollPos < 85 ) { scrollPos += 1	} 
-	else if( scroll < 0 && scrollPos > 0 ) { scrollPos -= 1	}
+	if( scroll > 0 && scrollPos < 144 && scrLock ) { 
 
-	if( scrollPos < 8 ) {
-
-		logo.position.y = 12 - Math.log( scrollPos + 2 ) * 3.2
-		logo.position.x = -logoWidth * .005 + Math.log( scrollPos + 1 ) / .72
-		logo.scale.x = logo.scale.y = .01 - ( Math.log( scrollPos + 1 ) / 500 )
-
-		services.position.y = -11 + Math.log( scrollPos ) * 6
-		services.rotation.x = -Math.PI / 180 * ( 90 - Math.exp( scrollPos / 2 ) )
-		objects.rotation.x = Math.PI / 180 * ( - Math.exp( scrollPos / 2 ) )
-		services.rotation.z = -Math.PI / 22.5 * scrollPos
-		objects.rotation.z = -Math.PI / 22.5 * scrollPos - ( 36 * ( Math.PI / 180 ) )
-		services.scale.x = services.scale.y = services.scale.z = Math.log( scrollPos ) / 2.7
-
-		objects.scale.x = objects.scale.y = objects.scale.z = 22 / scrollPos
-
-		for( let i = 1; i < 6; i++ ) {
-
-			servRot = eval( 's' + i ).rotation.z
-			eval( 's' + i ).position.x = Math.cos( servRot ) * Math.log( scrollPos ) * 4
-			eval( 's' + i ).position.y = Math.sin( servRot ) * Math.log( scrollPos ) * 4
-			eval( 's' + i ).curveRadius = -.1 - Math.exp( scrollPos / 3 )
-			eval( 'o' + i ).position.x = Math.cos( servRot ) * Math.log( 350 / scrollPos ) * 7.2
-			eval( 'o' + i ).position.y = Math.sin( servRot ) * Math.log( 350 / scrollPos ) * 7.2
-			eval( 'o' + i ).rotation.x = 
-			eval( 'o' + i ).rotation.y = 
-			eval( 'o' + i ).rotation.z = Math.PI / 33 * scrollPos
-
-		}
-		
-	} else if( scrollPos < 18 ) {
-
-		logo.position.y = 12 - Math.log( scrollPos + 2 ) * 3.2
-		logo.scale.x = logo.scale.y = .01 - ( Math.log( scrollPos + 1 ) / 500 )
-		logo.position.x = -logoWidth * .005 + Math.log( scrollPos + 1 ) / .72
-
-		services.rotation.z = -Math.PI / 22.5 * scrollPos
-		objects.rotation.z = -Math.PI / 22.5 * scrollPos - ( 36 * ( Math.PI / 180 ) )
-
-		objects.scale.x = objects.scale.y = objects.scale.z = 22 / scrollPos
-
-		for( let i = 1; i < 6; i++ ) {
-
-			servRot = eval( 's' + i ).rotation.z
-			eval( 's' + i ).curveRadius = -.1 - Math.exp( scrollPos / 3 )
-			eval( 'o' + i ).position.x = Math.cos( servRot ) * Math.log( 350 / scrollPos ) * 7.2
-			eval( 'o' + i ).position.y = Math.sin( servRot ) * Math.log( 350 / scrollPos ) * 7.2
-			eval( 'o' + i ).rotation.x = 
-			eval( 'o' + i ).rotation.y = 
-			eval( 'o' + i ).rotation.z = Math.PI / 33 * scrollPos
-
-		}
-
-	} else if( scrollPos < 50 ) {
-
-		eMaterial.uniforms.amp.value = 1 / Math.exp( ( scrollPos - 50 ) * .3 )
-
-		services.rotation.z = -Math.PI / 22.5 * scrollPos
-		objects.rotation.z = -Math.PI / 22.5 * scrollPos - ( 36 * ( Math.PI / 180 ) )
-		objects.scale.x = objects.scale.y = objects.scale.z = 22 / scrollPos
-
-		for( let i = 1; i < 6; i++ ) {
-
-			servRot = eval( 's' + i ).rotation.z
-			eval( 'o' + i ).position.x = Math.cos( servRot ) * Math.log( 350 / scrollPos ) * 7.2
-			eval( 'o' + i ).position.y = Math.sin( servRot ) * Math.log( 350 / scrollPos ) * 7.2
-			eval( 'o' + i ).rotation.x = 
-			eval( 'o' + i ).rotation.y = 
-			eval( 'o' + i ).rotation.z = Math.PI / 33 * scrollPos
-
-		}
-
-	} else {
-
-		material.uniforms.amp.value = Math.exp( ( scrollPos - 50 ) * .03 ) - 1
-
-		eMaterial.uniforms.amp.value = 1 / Math.exp( ( scrollPos - 50 ) * .3 )
-
-		services.rotation.z = -Math.PI / 22.5 * scrollPos
-		objects.rotation.z = -Math.PI / 22.5 * scrollPos - ( 36 * ( Math.PI / 180 ) )
-		objects.scale.x = objects.scale.y =
-		objects.scale.z = ( .35 / Math.exp( ( scrollPos - 50 ) / 6 ) )
-
-		for( let i = 1; i < 6; i++ ) {
-
-			servRot = eval( 's' + i ).rotation.z
-			eval( 's' + i ).position.x = Math.cos( servRot ) * Math.exp( ( scrollPos - 30 ) / 10 )
-			eval( 's' + i ).position.y = Math.sin( servRot ) * Math.exp( ( scrollPos - 30 ) / 10 )
-			eval( 'o' + i ).position.x = Math.cos( servRot ) * Math.log( 350 / scrollPos ) * 7.2
-			eval( 'o' + i ).position.y = Math.sin( servRot ) * Math.log( 350 / scrollPos ) * 7.2
-			eval( 'o' + i ).rotation.x = 
-			eval( 'o' + i ).rotation.y = 
-			eval( 'o' + i ).rotation.z = Math.PI / 33 * scrollPos
-
-		}
-
+		scrollPos += 1
+		roll()
+	
+	} else if( scroll < 0 && scrollPos > 0 && scrLock ) { 
+	
+		scrollPos -= 1
+		roll()
+	
 	}
 
-	txtQuoteM.position.x = -txtQuoteMX - 3 - Math.exp( scrollPos ) / 1000
-	txtQuoteL.position.x = 3 + txtQuoteLX + Math.exp( scrollPos ) / 1000
-	
-	txtQuoteM.curveRadius = 
-	txtQuoteL.curveRadius = 
-	txtQuoteMR * ( Math.cos( Math.log( scrollPos + 1 ) ) + 1 ) / smooth
+	function roll() {
 
-	if( scrollPos ) {
+		console.log( scrollPos )
 
+		if( scrollPos < 8 ) {
+
+			logo.position.y = 12 - Math.log( scrollPos + 2 ) * 3.2
+			logo.position.x = -logoWidth * .005 + Math.log( scrollPos + 1 ) / .72
+			logo.scale.x = logo.scale.y = .01 - ( Math.log( scrollPos + 1 ) / 530 )
+
+			services.position.y = -11 + Math.log( scrollPos ) * 6
+			services.rotation.x = -Math.PI / 180 * ( 90 - Math.exp( scrollPos / 2 ) )
+			objects.rotation.x = Math.PI / 180 * ( - Math.exp( scrollPos / 2 ) )
+			services.rotation.z = -Math.PI / 22.5 * scrollPos
+			objects.rotation.z = -Math.PI / 22.5 * scrollPos - ( 36 * ( Math.PI / 180 ) )
+			services.scale.x = services.scale.y = services.scale.z 
+				= Math.log( scrollPos ) / 2.7
+
+			objects.scale.x = objects.scale.y = objects.scale.z = 22 / scrollPos
+
+			for( let i = 1; i < 6; i++ ) {
+
+				servRot = eval( 's' + i ).rotation.z
+				eval( 's' + i ).position.x = Math.cos( servRot ) 
+					* Math.log( scrollPos ) * 4
+				eval( 's' + i ).position.y = Math.sin( servRot ) 
+					* Math.log( scrollPos ) * 4
+				eval( 's' + i ).curveRadius = -.1 - Math.exp( scrollPos / 3 )
+				eval( 'o' + i ).position.x = Math.cos( servRot ) 
+					* Math.log( 350 / scrollPos ) * 7.2
+				eval( 'o' + i ).position.y = Math.sin( servRot ) 
+					* Math.log( 350 / scrollPos ) * 7.2
+				eval( 'o' + i ).rotation.x = 
+				eval( 'o' + i ).rotation.y = 
+				eval( 'o' + i ).rotation.z = Math.PI / 33 * scrollPos
+
+			}
+			
+		} else if( scrollPos < 18 ) {
+
+			logo.position.y = 12 - Math.log( scrollPos + 2 ) * 3.2
+			logo.scale.x = logo.scale.y = logoScale 
+				= .01 - ( Math.log( scrollPos + 1 ) / 530 )
+			logo.position.x = -logoWidth * .005 + Math.log( scrollPos + 1 ) / .72
+
+			services.rotation.z = -Math.PI / 22.5 * scrollPos
+			objects.rotation.z = -Math.PI / 22.5 * scrollPos - ( 36 * ( Math.PI / 180 ) )
+
+			objects.scale.x = objects.scale.y = objects.scale.z = 22 / scrollPos
+
+			for( let i = 1; i < 6; i++ ) {
+
+				servRot = eval( 's' + i ).rotation.z
+				eval( 's' + i ).curveRadius = -.1 - Math.exp( scrollPos / 3 )
+				eval( 'o' + i ).position.x = Math.cos( servRot ) 
+					* Math.log( 350 / scrollPos ) * 7.2
+				eval( 'o' + i ).position.y = Math.sin( servRot ) 
+					* Math.log( 350 / scrollPos ) * 7.2
+				eval( 'o' + i ).rotation.x = 
+				eval( 'o' + i ).rotation.y = 
+				eval( 'o' + i ).rotation.z = Math.PI / 33 * scrollPos
+
+			}
+
+		} else if( scrollPos < 50 ) {
+
+			eMaterial.uniforms.amp.value = 1 / Math.exp( ( scrollPos - 50 ) * .2 )
+
+			services.rotation.z = -Math.PI / 22.5 * scrollPos
+			objects.rotation.z = -Math.PI / 22.5 * scrollPos - ( 36 * ( Math.PI / 180 ) )
+			objects.scale.x = objects.scale.y = objects.scale.z = 22 / scrollPos
+
+			for( let i = 1; i < 6; i++ ) {
+
+				servRot = eval( 's' + i ).rotation.z
+				eval( 'o' + i ).position.x = Math.cos( servRot ) 
+					* Math.log( 350 / scrollPos ) * 7.2
+				eval( 'o' + i ).position.y = Math.sin( servRot ) 
+					* Math.log( 350 / scrollPos ) * 7.2
+				eval( 'o' + i ).rotation.x = 
+				eval( 'o' + i ).rotation.y = 
+				eval( 'o' + i ).rotation.z = Math.PI / 33 * scrollPos
+
+			}
+
+		} else if( scrollPos < 70 ) {
+
+			material.uniforms.amp.value = Math.exp( ( scrollPos - 50 ) * .03 ) - 1
+
+			logo.scale.x = logo.scale.y = ( Math.exp( ( scrollPos - 50 ) / 230 ) ) * logoScale
+
+			eMaterial.uniforms.amp.value = 1 / Math.exp( ( scrollPos - 50 ) * .2 )
+
+			e.scale.x = e.scale.y = Math.log( ( scrollPos - 49 ) / 72 + 1 )
+			e.position.x = - e.geometry.boundingSphere.radius * e.scale.x
+
+			services.rotation.z = -Math.PI / 22.5 * scrollPos
+			objects.rotation.z = -Math.PI / 22.5 * scrollPos - ( 36 * ( Math.PI / 180 ) )
+			objects.scale.x = objects.scale.y =
+			objects.scale.z = ( .35 / Math.exp( ( scrollPos - 50 ) / 6 ) )
+
+			for( let i = 1; i < 6; i++ ) {
+
+				servRot = eval( 's' + i ).rotation.z
+				eval( 's' + i ).position.x = Math.cos( servRot ) 
+					* Math.exp( ( scrollPos - 30 ) / 10 )
+				eval( 's' + i ).position.y = Math.sin( servRot ) 
+					* Math.exp( ( scrollPos - 30 ) / 10 )
+				eval( 'o' + i ).position.x = Math.cos( servRot ) 
+					* Math.log( 350 / scrollPos ) * 7.2
+				eval( 'o' + i ).position.y = Math.sin( servRot ) 
+					* Math.log( 350 / scrollPos ) * 7.2
+				eval( 'o' + i ).rotation.x = 
+				eval( 'o' + i ).rotation.y = 
+				eval( 'o' + i ).rotation.z = Math.PI / 33 * scrollPos
+
+			}
+
+		} else {
+
+			material.uniforms.amp.value = Math.exp( ( scrollPos - 50 ) * .03 ) - 1
+
+			logo.scale.x = logo.scale.y
+				= ( Math.exp( ( scrollPos - 35 ) / 100 ) ) 
+				* logoScale 
+				* Math.exp( ( scrollPos - 72 ) / 12 )
+
+			logo.rotation.x = Math.PI / 180 * ( scrollPos - 70 )
+			logo.rotation.y = Math.PI + logo.rotation.x
+
+			eMaterial.uniforms.amp.value = 1 / Math.exp( ( scrollPos - 50 ) * .2 )
+
+			e.scale.x = e.scale.y = Math.log( ( scrollPos - 49 ) / 72 + 1 )
+			e.position.x = - e.geometry.boundingSphere.radius * e.scale.x
+			e.position.y = - e.geometry.boundingSphere.center.y * e.scale.x
+
+			services.rotation.z = -Math.PI / 22.5 * scrollPos
+			objects.rotation.z = -Math.PI / 22.5 * scrollPos - ( 36 * ( Math.PI / 180 ) )
+			objects.scale.x = objects.scale.y =
+			objects.scale.z = ( .35 / Math.exp( ( scrollPos - 50 ) / 6 ) )
+
+			for( let i = 1; i < 6; i++ ) {
+
+				servRot = eval( 's' + i ).rotation.z
+				eval( 's' + i ).position.x = Math.cos( servRot ) 
+					* Math.exp( ( scrollPos - 30 ) / 10 )
+				eval( 's' + i ).position.y = Math.sin( servRot ) 
+					* Math.exp( ( scrollPos - 30 ) / 10 )
+				eval( 'o' + i ).position.x = Math.cos( servRot ) 
+					* Math.log( 350 / scrollPos ) * 7.2
+				eval( 'o' + i ).position.y = Math.sin( servRot ) 
+					* Math.log( 350 / scrollPos ) * 7.2
+				eval( 'o' + i ).rotation.x = 
+				eval( 'o' + i ).rotation.y = 
+				eval( 'o' + i ).rotation.z = Math.PI / 33 * scrollPos
+
+			}
+
+		}
+
+		txtQuoteM.position.x = -txtQuoteMX - 3 - Math.exp( scrollPos ) / 1000
+		txtQuoteL.position.x = 3 + txtQuoteLX + Math.exp( scrollPos ) / 1000
+		
 		txtQuoteM.curveRadius = 
 		txtQuoteL.curveRadius = 
 		txtQuoteMR * ( Math.cos( Math.log( scrollPos + 1 ) ) + 1 ) / smooth
 
-	} else {
+		if( scrollPos ) {
 
-		txtQuoteM.curveRadius = txtQuoteMR
-		txtQuoteL.curveRadius = txtQuoteLR
-		logo.scale.set( .01, .01, -.01 )
-    logo.position.set( -logoWidth * .005, 10, 0 )
+			txtQuoteM.curveRadius = 
+			txtQuoteL.curveRadius = 
+			txtQuoteMR * ( Math.cos( Math.log( scrollPos + 1 ) ) + 1 ) / smooth
+
+		} else {
+
+			txtQuoteM.curveRadius = txtQuoteMR
+			txtQuoteL.curveRadius = txtQuoteLR
+			logo.scale.set( .01, .01, -.01 )
+			logo.position.set( -logoWidth * .005, 10, 0 )
+
+		}
 
 	}
 
@@ -487,19 +578,58 @@ function onMouseWheel( event ) {
 function animate() { 
 
   requestAnimationFrame( animate )
-
+	
   renderer.render( scene, camera )
+
+	composer.render()
+
+	postprocessing.composer.render( 0.1 )
 
 	// raycaster.setFromCamera( mouse, camera )
 
 	// const intersects = raycaster.intersectObjects( scene.children )
 
-	// for ( let i = 0; i < intersects.length; i ++ ) {
+	// for( let i = 0; i < intersects.length; i ++ ) {
 
-	// 	intersects[ i ].object.material.color.set( 0xff0000 )
+	// 	if( intersects[ i ].object = 'Mesh' ) {
+	// 		console.log(intersects[ i ])
+	// 	}
 
 	// }
 
 }
 
+initPostprocessing()
+
 animate()
+
+/////////////////// POST PROC
+
+function initPostprocessing() {
+
+	const renderPass = new RenderPass( scene, camera )
+
+	const bokehPass = new BokehPass( scene, camera, {
+
+		focus: 50.0,
+		aperture: 0.0053,
+		maxblur: 0.018,
+		
+		width: width,
+		height: height
+
+	} )
+
+	renderPass.renderToScreen = false
+	renderPass.clear = false
+  bokehPass.renderToScreen = true
+
+	const composer = new EffectComposer( renderer )
+
+	postprocessing.composer = composer
+	postprocessing.bokeh = bokehPass
+	
+	composer.addPass( renderPass )
+	composer.addPass( bokehPass )	
+
+}
