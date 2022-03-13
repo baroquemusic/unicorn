@@ -167,7 +167,7 @@ logoLoader.load(
     logo.position.set( -logoWidth * .005, 10, 0 )
 
     scene.add( logo )
-
+console.log(logo)
 	}
 
 )
@@ -290,23 +290,6 @@ scene.add( objects )
 
 //////////// EMAIL
 
-const fontLoader = new FontLoader
-
-let eGeometry
-
-fontLoader.load( 'Philosopher.json', ( font ) => {
-
-	eGeometry = new TextGeometry( 'hi@unicorn3d.com', {
-
-		font: font
-		
-	} )
-
-	//eGeometry = tessGeo.modify( eGeometry )
-
-} )
-
-
 const eMaterial = new THREE.ShaderMaterial( {
 
 	fragmentShader: fragmentShader(),
@@ -315,10 +298,55 @@ const eMaterial = new THREE.ShaderMaterial( {
 
 } )
 
-let e = new THREE.Mesh( eGeometry, eMaterial )
+const fontLoader = new FontLoader
 
-scene.add( e )
-console.log(e)
+fontLoader.load( 'Philosopher.json', ( font ) => {
+
+	let geometry = new TextGeometry( 'hi@unicorn3d.com', {
+
+	 	font: font,
+		size: 2,
+		height: 0,
+		curveSegments: 3
+		
+	} )
+
+	geometry = tessGeo.modify( geometry )
+
+	const numFaces = geometry.attributes.position.count / 3
+
+	const dis = new Float32Array( numFaces * 9 )
+
+	for( let i = 0; i < numFaces; i++ ) {
+
+		var ix = i * 9
+
+		random()
+
+		for( let k = 0; k < 3; k++ ) {
+
+			dis[ ix + 3 * k ] = out[ 0 ]
+			dis[ ix + 3 * k + 1 ] = out[ 1 ] - window.innerHeight / 2
+			dis[ ix + 3 * k + 2 ] = out[ 2 ]
+
+		}
+
+	}
+
+	geometry.setAttribute( 'dis', new THREE.BufferAttribute( dis, 3 ) )
+
+	let e = new THREE.Mesh( geometry, eMaterial )
+
+	eMaterial.uniforms.amp.value = 15000
+
+	scene.add( e )
+
+	const bb = new THREE.Box3().setFromObject( e )
+
+	e.position.x = -bb.max.x / 2
+	e.position.y = bb.max.y / 2
+
+} )
 
 //////////////// SCROLL
 
@@ -330,12 +358,8 @@ function onMouseWheel( event ) {
 
 	scroll = event.deltaY
 
-	if( scroll > 0 ) { scrollPos += 1	} 
+	if( scroll > 0 && scrollPos < 85 ) { scrollPos += 1	} 
 	else if( scroll < 0 && scrollPos > 0 ) { scrollPos -= 1	}
-
-	console.log(scrollPos)
-
-eMaterial.uniforms.amp.value = ( scrollPos - 0 ) * 1
 
 	if( scrollPos < 8 ) {
 
@@ -391,6 +415,8 @@ eMaterial.uniforms.amp.value = ( scrollPos - 0 ) * 1
 
 	} else if( scrollPos < 50 ) {
 
+		eMaterial.uniforms.amp.value = 1 / Math.exp( ( scrollPos - 50 ) * .3 )
+
 		services.rotation.z = -Math.PI / 22.5 * scrollPos
 		objects.rotation.z = -Math.PI / 22.5 * scrollPos - ( 36 * ( Math.PI / 180 ) )
 		objects.scale.x = objects.scale.y = objects.scale.z = 22 / scrollPos
@@ -408,7 +434,9 @@ eMaterial.uniforms.amp.value = ( scrollPos - 0 ) * 1
 
 	} else {
 
-		material.uniforms.amp.value = ( scrollPos - 50 ) * .1
+		material.uniforms.amp.value = Math.exp( ( scrollPos - 50 ) * .03 ) - 1
+
+		eMaterial.uniforms.amp.value = 1 / Math.exp( ( scrollPos - 50 ) * .3 )
 
 		services.rotation.z = -Math.PI / 22.5 * scrollPos
 		objects.rotation.z = -Math.PI / 22.5 * scrollPos - ( 36 * ( Math.PI / 180 ) )
