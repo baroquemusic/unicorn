@@ -4,7 +4,7 @@
   "description": "Unicorn 3D",
   "main": "index.js",
   "scripts": {
-    "build": "webpack",
+    "build": "webpack --mode=production --node-env=production",
     "dev": "webpack serve"
   },
   "author": "Gabor Kovacs",
