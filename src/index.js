@@ -7,9 +7,6 @@ import { Text } from 'troika-three-text'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 import { TessellateModifier } from 'three/examples/jsm/modifiers/TessellateModifier.js'
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
-import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js'
 import unicornLogo from './assets/unicorn-logo.svg'
 import font from './assets/fonts/Philosopher.woff'
 import fontJson from './assets/fonts/Philosopher.json'
@@ -21,13 +18,9 @@ import interactive3D from './assets/glb/interact.glb'
 
 var scrLock = false
 
-const postprocessing = {}
-
 const renderer = new THREE.WebGLRenderer( { antialias: true } )
 renderer.setSize( window.innerWidth, window.innerHeight )
 document.body.appendChild( renderer.domElement )
-
-const composer = new EffectComposer( renderer )
 
 const camera = new THREE.PerspectiveCamera
   ( 45, window.innerWidth / window.innerHeight, 1, 1000 )
@@ -37,25 +30,15 @@ camera.lookAt( 0, 0, 0 )
 const scene = new THREE.Scene()
 scene.background = new THREE.Color( 'white' )
 
-const renderPass = new RenderPass( scene, camera )
-composer.addPass( renderPass )
-
 const manager = new THREE.LoadingManager
 
 const gltfLoader = new GLTFLoader( manager )
-
-let width, height
 
 function onWindowResize() {
 
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize( window.innerWidth, window.innerHeight )
-
-	width = window.innerWidth
-	height = window.innerHeight
-
-	postprocessing.composer.setSize( width, height )
 
 }
 
@@ -480,8 +463,9 @@ function onMouseWheel( event ) {
 
 			eMaterial.uniforms.amp.value = 1 / Math.exp( ( scrollPos - 50 ) * .2 )
 
-			e.scale.x = e.scale.y = Math.log( ( scrollPos - 49 ) / 72 + 1 )
+			e.scale.x = e.scale.y = Math.log( ( scrollPos - 49 ) / 20 + 1 )
 			e.position.x = - e.geometry.boundingSphere.radius * e.scale.x
+			e.rotation.x = e.rotation.y = - Math.PI / 180 * ( 70 - scrollPos ) * 2
 
 			services.rotation.z = -Math.PI / 22.5 * scrollPos
 			objects.rotation.z = -Math.PI / 22.5 * scrollPos - ( 36 * ( Math.PI / 180 ) )
@@ -507,19 +491,19 @@ function onMouseWheel( event ) {
 
 		} else {
 
-			material.uniforms.amp.value = Math.exp( ( scrollPos - 50 ) * .03 ) - 1
+			material.uniforms.amp.value = Math.exp( ( scrollPos - 50 ) * .035 ) - 1
 
 			logo.scale.x = logo.scale.y
-				= ( Math.exp( ( scrollPos - 35 ) / 100 ) ) 
+				= ( Math.exp( ( scrollPos - 70 ) / 95 ) ) 
 				* logoScale 
-				* Math.exp( ( scrollPos - 72 ) / 12 )
+				* Math.exp( ( scrollPos - 70 ) / 12 )
 
 			logo.rotation.x = Math.PI / 180 * ( scrollPos - 70 )
-			logo.rotation.y = Math.PI + logo.rotation.x
+			logo.rotation.y = Math.PI + logo.rotation.x * 1.5
 
 			eMaterial.uniforms.amp.value = 1 / Math.exp( ( scrollPos - 50 ) * .2 )
 
-			e.scale.x = e.scale.y = Math.log( ( scrollPos - 49 ) / 72 + 1 )
+			e.scale.x = e.scale.y = Math.log( ( scrollPos - 49 ) / 20 + 1 )
 			e.position.x = - e.geometry.boundingSphere.radius * e.scale.x
 			e.position.y = - e.geometry.boundingSphere.center.y * e.scale.x
 
@@ -578,12 +562,8 @@ function onMouseWheel( event ) {
 function animate() { 
 
   requestAnimationFrame( animate )
-	
+
   renderer.render( scene, camera )
-
-	composer.render()
-
-	postprocessing.composer.render( 0.1 )
 
 	// raycaster.setFromCamera( mouse, camera )
 
@@ -599,37 +579,4 @@ function animate() {
 
 }
 
-initPostprocessing()
-
 animate()
-
-/////////////////// POST PROC
-
-function initPostprocessing() {
-
-	const renderPass = new RenderPass( scene, camera )
-
-	const bokehPass = new BokehPass( scene, camera, {
-
-		focus: 50.0,
-		aperture: 0.0053,
-		maxblur: 0.018,
-		
-		width: width,
-		height: height
-
-	} )
-
-	renderPass.renderToScreen = false
-	renderPass.clear = false
-  bokehPass.renderToScreen = true
-
-	const composer = new EffectComposer( renderer )
-
-	postprocessing.composer = composer
-	postprocessing.bokeh = bokehPass
-	
-	composer.addPass( renderPass )
-	composer.addPass( bokehPass )	
-
-}
