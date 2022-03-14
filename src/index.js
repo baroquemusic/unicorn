@@ -1,6 +1,5 @@
 import favicon from './assets/favicon.ico'
 import * as THREE from 'three'
-import { LoadingManager } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader'
 import { Text } from 'troika-three-text'
@@ -21,6 +20,19 @@ var scrLock = false
 const renderer = new THREE.WebGLRenderer( { antialias: true } )
 renderer.setSize( window.innerWidth, window.innerHeight )
 document.body.appendChild( renderer.domElement )
+document.addEventListener( 'click', click )
+
+function click() {
+
+	if( scrollPos > 88 ) {
+
+		navigator.clipboard.writeText( 'hi@unicorn3d.com' )
+
+		alert( 'hi@unicorn3d.com copied to your clipboard' )
+
+	}
+
+}
 
 const camera = new THREE.PerspectiveCamera
   ( 45, window.innerWidth / window.innerHeight, 1, 1000 )
